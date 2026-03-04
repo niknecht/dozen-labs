@@ -1,0 +1,6 @@
+-std=c++23
+--analyze
+-Wall
+-Werror
+-Wextra
+

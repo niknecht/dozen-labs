@@ -39,3 +39,11 @@
 
 # debug information files
 *.dwo
+
+# Markdown preview renderer files
+*/node_modules
+*/package.json
+*/package-*.json
+
+# Various configuration
+*/.clangd
