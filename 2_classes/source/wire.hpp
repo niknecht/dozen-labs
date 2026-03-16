@@ -31,13 +31,14 @@ public:
 	~Wire();
 
 
-	Wire& operator>>(Wire& that) noexcept;
+	Wire& operator>>(Wire<OppositeDirection>& that) noexcept;
 
-	bool operator==(const Wire&);
-	bool operator>(const Wire&);
-	auto operator<=>(const Wire&);
+	bool operator==(const Wire&) const;
+	bool operator>(const Wire&) const;
+	auto operator<=>(const Wire&) const;
 
-	std::expected<float, std::string_view> time(const Wire&) noexcept;
+	std::expected<float, std::string_view> time(const Wire&) const noexcept;
+	std::expected<void, std::string_view> make_connect(const std::pair<float, float>); // Makes unique
 };
 
 class basic_Wire {
@@ -45,9 +46,9 @@ private:
 	basic_Wire() noexcept(false);
 	std::pair<float, float> uv; // uv [0;1][0;1]
 	
-	bool operator==(const basic_Wire&);
-	bool operator>(const basic_Wire&);
-	auto operator<=>(const basic_Wire&);
+	bool operator==(const basic_Wire&) const;
+	bool operator>(const basic_Wire&) const;
+	auto operator<=>(const basic_Wire&) const;
 };
 
 class basic_InWire : public basic_Wire {
