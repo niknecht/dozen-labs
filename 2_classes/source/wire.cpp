@@ -1,8 +1,3 @@
-#pragma once
+#include "wire.hpp"
 
-class Wire {
-public:
-	Wire();
-};
-
-class Board;
+#include <exception>
