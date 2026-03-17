@@ -11,9 +11,9 @@ constexpr static decltype(auto) g_signalSpeed {5lu};
 
 template<class> class Wire;
 class basic_Wire;
-class basic_InWire;
-class basic_OutWire;
-
+using basic_InWire = basic_Wire; // This means all the Wire type checks are now
+using basic_OutWire = basic_Wire; //done by the built-in compile-time type checking in C++.
+				//  It's impossible to mismatch wire directions no manual checking needed
 template<class Direction>
 class Wire {
 private:
@@ -43,20 +43,10 @@ public:
 
 class basic_Wire {
 private:
-	basic_Wire() noexcept(false);
+	basic_Wire(const std::pair<float, float>) noexcept(false);
 	std::pair<float, float> uv; // uv [0;1][0;1]
 	
 	bool operator==(const basic_Wire&) const;
 	bool operator>(const basic_Wire&) const;
 	auto operator<=>(const basic_Wire&) const;
-};
-
-class basic_InWire : public basic_Wire {
-private:
-	basic_InWire(std::pair<float, float>) noexcept(false);
-};
-
-class basic_OutWire : public basic_Wire{
-private:
-	basic_OutWire(std::pair<float, float>) noexcept(false);
 };
