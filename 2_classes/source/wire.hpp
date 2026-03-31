@@ -9,43 +9,56 @@
 
 constexpr static decltype(auto) g_signalSpeed {5lu};
 
-template<class> class Wire;
-class basic_Wire;
-using basic_InWire = basic_Wire; // This means all the Wire type checks are now
-using basic_OutWire = basic_Wire; //done by the built-in compile-time type checking in C++.
-				//  It's impossible to mismatch wire directions no manual checking needed
 template<class Direction>
 class Wire {
+	// Keep these here for nore intuitive API, at the cost of tiny DRY violation
+	enum class Direction_t {In, Out};
+
+	template <Direction_t D>
+	class basic_Wire; 
+	
+	using basic_InWire = basic_Wire<Direction_t::In>; // This means all the Wire type checks are now
+	using basic_OutWire = basic_Wire<Direction_t::Out>; //done by the built-in compile-time type checking in C++.
+							//  It's impossible to mismatch wire directions no manual checking needed
 private:
 	static_assert(std::is_same_v<Direction, basic_InWire> || std::is_same_v<Direction, basic_OutWire>);
 	using OppositeDirection = std::conditional<std::is_same_v<Direction, basic_InWire>, basic_OutWire, basic_InWire>;
 	const Direction it;
 	std::optional<std::unique_ptr<OppositeDirection>> connected;
+
+	
+	std::expected<float, std::string_view> basic_time_to(const Wire&) const noexcept;
+	std::expected<Wire<OppositeDirection>&, std::string_view> make_connect(const std::pair<float, float>); // Makes unique
 public:
 	Wire() = delete;
-	Wire(const Wire&) = default;
+	Wire(const Wire&);
 	Wire& operator=(const Wire&);
 
-	Wire(std::pair<float, float> uv) noexcept(false);
-	
-	~Wire();
+	explicit Wire(std::pair<float, float> uv) noexcept(false);
+	~Wire() = default;
 
 
-	Wire& operator>>(Wire<OppositeDirection>& that) noexcept;
+	std::expected<Wire<OppositeDirection>&, std::string_view> operator>>(Wire<OppositeDirection>& that) noexcept;
 
 	bool operator==(const Wire&) const;
 	bool operator>(const Wire&) const;
 	auto operator<=>(const Wire&) const;
-
-	std::expected<float, std::string_view> time(const Wire&) const noexcept;
-	std::expected<void, std::string_view> make_connect(const std::pair<float, float>); // Makes unique
 };
 
-class basic_Wire {
+// We already break DRY by recounting the exact parameter list in .cpp, so why stop there?
+template <class Direction>
+template <Wire<Direction>::Direction_t D>
+class Wire<Direction>::basic_Wire {
+	using __tag = std::integral_constant<Direction_t, D>; // So is_same_v counts them as different
 private:
+	basic_Wire() = delete;
 	basic_Wire(const std::pair<float, float>) noexcept(false);
 	std::pair<float, float> uv; // uv [0;1][0;1]
+				    //
+	basic_Wire& operator=(const basic_Wire&) = default;
 	
+	~basic_Wire() = default;
+
 	bool operator==(const basic_Wire&) const;
 	bool operator>(const basic_Wire&) const;
 	auto operator<=>(const basic_Wire&) const;
