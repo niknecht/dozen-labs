@@ -9,20 +9,23 @@
 
 constexpr static decltype(auto) g_signalSpeed {5lu};
 
+
+enum class Direction_t {In, Out};
+
+template <Direction_t D>
+class basic_Wire; 
+	
+using basic_InWire = basic_Wire<Direction_t::In>; // This means all the Wire type checks are now
+using basic_OutWire = basic_Wire<Direction_t::Out>; //done by the built-in compile-time type checking in C++.
+static_assert(!std::is_same_v<basic_InWire, basic_OutWire>);//  It's impossible to mismatch wire directions no manual checking needed
+
+
 template<class Direction>
 class Wire {
-	// Keep these here for nore intuitive API, at the cost of tiny DRY violation
-	enum class Direction_t {In, Out};
-
-	template <Direction_t D>
-	class basic_Wire; 
-	
-	using basic_InWire = basic_Wire<Direction_t::In>; // This means all the Wire type checks are now
-	using basic_OutWire = basic_Wire<Direction_t::Out>; //done by the built-in compile-time type checking in C++.
-							//  It's impossible to mismatch wire directions no manual checking needed
 private:
 	static_assert(std::is_same_v<Direction, basic_InWire> || std::is_same_v<Direction, basic_OutWire>);
 	using OppositeDirection = std::conditional<std::is_same_v<Direction, basic_InWire>, basic_OutWire, basic_InWire>;
+
 	const Direction it;
 	std::optional<std::unique_ptr<OppositeDirection>> connected;
 
@@ -45,11 +48,11 @@ public:
 	auto operator<=>(const Wire&) const;
 };
 
-// We already break DRY by recounting the exact parameter list in .cpp, so why stop there?
-template <class Direction>
-template <Wire<Direction>::Direction_t D>
-class Wire<Direction>::basic_Wire {
-	using __tag = std::integral_constant<Direction_t, D>; // So is_same_v counts them as different
+template <Direction_t D>
+class basic_Wire {
+	using __tag = std::integral_constant<Direction_t, D>; // So is_same_v counts the aliases as different
+public:
+	~basic_Wire() = default; // If I make this pruvate, I can't use this type with vector of veriants
 private:
 	basic_Wire() = delete;
 	basic_Wire(const std::pair<float, float>) noexcept(false);
@@ -57,7 +60,6 @@ private:
 				    //
 	basic_Wire& operator=(const basic_Wire&) = default;
 	
-	~basic_Wire() = default;
 
 	bool operator==(const basic_Wire&) const;
 	bool operator>(const basic_Wire&) const;
