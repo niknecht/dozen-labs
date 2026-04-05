@@ -1,5 +1,5 @@
 #include "wire.hpp"
-
+/*
 #include <exception>
 #include <cmath>
 
@@ -77,3 +77,17 @@ std::expected<Wire<typename Wire<Direction>::OppositeDirection>&, std::string_vi
 		return std::unexpected("Error: One-sided connection change not permitted.");
 	return (this->connected.reset(std::make_unique<Wire<OppositeDirection>>(newUv)));
 }
+
+template <class Direction>
+std::expected<void, std::string_view> Wire<Direction>::disconnect(){
+	if(!connected.has_value())
+		return
+}*/
+
+std::expected<&&, std::string_view> Wire<Derived>::make_tethered(auto... args) requires(is_constructible_to_Wire<Derived>) {
+	return static_cast<Derived>(*this).tethered
+		.and_then(std::unexpected("Error: The connection is taken."))
+		.or_else([&](auto& it){it.reset(); return it = std::make_unique(args...);}()); // void
+}
+
+//TODO Overload an operator= of rvalue reference to

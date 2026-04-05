@@ -6,12 +6,12 @@
 
 class Board {
 private:
-	std::vector<std::variant<basic_InWire, basic_OutWire>> interconnect;
+	std::vector<std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>> interconnect;
 
 public:
 	Board() = delete;
-	explicit Board(std::span<std::variant<basic_InWire, basic_OutWire>> interconnect_src);
-	explicit Board(const std::variant<basic_InWire, basic_OutWire>&);
+	explicit Board(std::span<std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>> interconnect_src);
+	explicit Board(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
 
-	Board& operator+=(std::variant<basic_InWire, basic_OutWire>);
+	Board& operator+=(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
 };

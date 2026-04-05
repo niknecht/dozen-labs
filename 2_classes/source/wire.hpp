@@ -3,65 +3,73 @@
 #include <expected>
 #include <string_view>
 #include <memory>
+#include <functional>
 #include <type_traits>
 
 #pragma once
 
 constexpr static decltype(auto) g_signalSpeed {5lu};
 
+// Static interface CRTP
+template <class>
+class Wire;
+class InWire;
+class OutWire;
 
-enum class Direction_t {In, Out};
+template <class Derived, typename ...constructableToWire_t>	
+concept is_constructible_to_Wire = 
+	requires(Derived D){ D(std::declval<constructableToWire_t>()...);};
 
-template <Direction_t D>
-class basic_Wire; 
-	
-using basic_InWire = basic_Wire<Direction_t::In>; // This means all the Wire type checks are now
-using basic_OutWire = basic_Wire<Direction_t::Out>; //done by the built-in compile-time type checking in C++.
-static_assert(!std::is_same_v<basic_InWire, basic_OutWire>);//  It's impossible to mismatch wire directions no manual checking needed
-
-
-template<class Direction>
+template <class Derived>
 class Wire {
 private:
-	static_assert(std::is_same_v<Direction, basic_InWire> || std::is_same_v<Direction, basic_OutWire>);
-	using OppositeDirection = std::conditional<std::is_same_v<Direction, basic_InWire>, basic_OutWire, basic_InWire>;
-
-	const Direction it;
-	std::optional<std::unique_ptr<OppositeDirection>> connected;
-
-	
-	std::expected<float, std::string_view> basic_time_to(const Wire&) const noexcept;
-	std::expected<Wire<OppositeDirection>&, std::string_view> make_connect(const std::pair<float, float>); // Makes unique
+	std::pair<float, float> uv;
+	class Tethered_t;
 public:
 	Wire() = delete;
-	Wire(const Wire&);
-	Wire& operator=(const Wire&);
+	Wire(const Wire<Derived>&);
+	Wire& operator=(const Wire<Derived>&);
 
-	explicit Wire(std::pair<float, float> uv) noexcept(false);
+	explicit Wire(const std::pair<float, float>) noexcept;
+
+	bool operator==(const Wire&); // Making this a template auto would equate Wire to whatever
+	bool operator> (const Wire&); // a Wire can be constructed from
+	auto operator<=>(const Wire&); // which is, obviously, very wrong
+
+	std::expected<void, std::string_view> disconnect(); // Tha powa of CRTP!! Derived.tethered
+
 	~Wire() = default;
 
-
-	std::expected<Wire<OppositeDirection>&, std::string_view> operator>>(Wire<OppositeDirection>& that) noexcept;
-
-	bool operator==(const Wire&) const;
-	bool operator>(const Wire&) const;
-	auto operator<=>(const Wire&) const;
-};
-
-template <Direction_t D>
-class basic_Wire {
-	using __tag = std::integral_constant<Direction_t, D>; // So is_same_v counts the aliases as different
-public:
-	~basic_Wire() = default; // If I make this pruvate, I can't use this type with vector of veriants
-private:
-	basic_Wire() = delete;
-	basic_Wire(const std::pair<float, float>) noexcept(false);
-	std::pair<float, float> uv; // uv [0;1][0;1]
-				    //
-	basic_Wire& operator=(const basic_Wire&) = default;
+	auto make_tethered(auto...) -> // But here, the construction is implied
+	std::expected<std::remove_reference_t<Wire<Derived>::Tethered_t> &&, std::string_view>
+	requires(is_constructible_to_Wire<Derived>); // Also, I don't have to write a deduction guide thanks to auto
 	
-
-	bool operator==(const basic_Wire&) const;
-	bool operator>(const basic_Wire&) const;
-	auto operator<=>(const basic_Wire&) const;
+	Derived&& operator=(Derived&&);
+		// Okay, now this is a hack, but the assignment itself doesn't allow a conventional method
+	std::expected<void, std::string_view> operator>>(const Tethered_t& newTethered);
 };
+
+// These handle the  tethered
+class InWire : public Wire<InWire> {
+private:
+	using Tethered_t = OutWire;
+	std::optional<std::reference_wrapper<Tethered_t>> tethered;
+public:
+};
+
+class OutWire : public Wire<OutWire> {
+private:
+	using Tethered_t = InWire;
+	std::optional<std::reference_wrapper<Tethered_t>> tethered;
+public:
+
+};
+
+// TODO Use factory pattern for make_tethered if possible
+
+// TODO make Derived Derived::operator=(Derived moved&&) {*this = std::forward<Derived>(moved); return static_cast(this->tethered.tethered = *this);} return std::move(...)
+// TODO Add constuctors to the derived classes (maybe use same concept that is already defined)
+// TODO Tests: type validity
+// 1) copy doesn't end up with tethered type mismatch
+//
+// TODO: Use range_value_t in board class i guess (or just let it implicitly convert to span?)
