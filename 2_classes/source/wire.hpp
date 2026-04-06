@@ -1,5 +1,7 @@
 #include <utility>
 #include <functional>
+#include <any>
+#include <optional>
 
 class InWire;
 class OutWire;
@@ -35,30 +37,38 @@ public:
 // C writes this into stub
 // factory destructor writes stub into the OutWire tethered
 
-
+// Usage: std::declval<Product> = make_tethered(constructor_args);
+// TODO: So, in case I make a new Wire class that would have many connections to different types of wires
+// (Maybe use std::visit)
 template <class Base, class Product>
 class WireFactory {
 private:
-	basic_Wire temp_stub; // idc good enough for govt work 
-			      // and the compiler will bitch if I put a fully fledged Base var in here
-	std::reference_wrapper<Base> owner;
-	std::reference_wrapper<Product> stub;
+	std::optional<std::reference_wrapper<Base>> owner; // owner is not always knwown at construction
+	std::optional<std::reference_wrapper<Product>> stub; // Wrire tethered to owner source
+	std::any temp_stub; // No can make this Base cause the type is incomplete 
 public:
-	WireFactory() = delete;
+	WireFactory() = default;
 	WireFactory(Base&);
 	WireFactory(WireFactory&&);
 
 	~WireFactory();
+
+	void set_temp_stub(const std::any&);
+	decltype(temp_stub)&& move_temp_stub();
+	void set_stub(const decltype(stub)&);
+	decltype(owner) get_owner() const noexcept;
 };
 
-
-// No can use CRTP cause then I get a loop of incomplete types
-class InWire : basic_Wire {
+class InWire : public basic_Wire {
 	friend WireFactory<InWire, OutWire>;
+	friend OutWire;
 private:
 	WireFactory<InWire, OutWire> factory;
+	std::reference_wrapper<OutWire> tethered;
 public:
 	InWire(WireFactory<OutWire, InWire>);
+	InWire(const InWire&);
+	InWire(InWire&&);
 
 	template<auto... t_args>
 	decltype(factory)&& make_tethered(decltype(t_args)...) // Here the construction is implied
@@ -67,12 +77,16 @@ public:
 	InWire(WireFactory<OutWire, InWire>&&);
 };
 
-class OutWire : basic_Wire {
+class OutWire : public basic_Wire {
 	friend WireFactory<OutWire, InWire>;
+	friend InWire;
 private:
 	WireFactory<OutWire, InWire> factory;
+	std::reference_wrapper<InWire> tethered;
 public:
 	OutWire(WireFactory<InWire, OutWire>);
+	OutWire(const OutWire&);
+	OutWire(OutWire&&);
 
 	template<auto... t_args>
 	decltype(factory)&& make_tethered(decltype(t_args)...)

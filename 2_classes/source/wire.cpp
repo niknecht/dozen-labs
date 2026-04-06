@@ -1,93 +1,76 @@
 #include "wire.hpp"
-/*
-#include <exception>
-#include <cmath>
 
-template <class Direction> Wire<Direction>::Wire(std::pair<float, float> uv) noexcept(false) : it(uv){};
+#include <type_traits>
 
-template <Direction_t D>
-basic_Wire<D>::basic_Wire(std::pair<float, float> uv) noexcept(false) 
-	: 
-		uv(
-			[uv]()->std::expected<std::pair<float, float>, std::exception>{
-				if (uv < std::pair(0.f, 0.f || uv > std::pair(1.f, 1.f))) 
-					return uv; 
-				else 
-					return std::unexpected(std::out_of_range("uv is out of range"));
-			}()
-			.or_else([](const std::exception& err)->std::expected<std::pair<float, float>, std::exception>
-			{
-				throw err;
-				return std::unexpected(err);
-			})
-			.value()
-		) {}
+template <class Base, class Product>
+WireFactory<Base, Product>::WireFactory(Base& base) :owner{base}{
+}
 
-template<class Direction> Wire<Direction>& Wire<Direction>::operator=(const Wire<Direction>& other) 
+template <auto... args>
+decltype(std::declval<InWire>().factory)&& InWire::make_tethered(decltype(args)...)
+requires(std::is_constructible_v<OutWire, decltype(args)...>) 
 {
-	it = other.it;
-	connected = std::make_unique<OppositeDirection>(connected.get());
-	return *this;
+	this->factory.set_temp_stub(OutWire(args...));
+	return std::move(this->factory);
 }
-template<class Direction> Wire<Direction>::Wire(const Wire<Direction>& other)
-	:
-		connected(std::make_unique<OppositeDirection>(other.connected.get())),
-		it(other.it){}
-
-template<Direction_t D>
-bool basic_Wire<D>::operator>(const basic_Wire& that) const {
-	return this->uv.first*this->uv.first + this->uv.second*this->uv.second 
-		> that.uv.first*that.uv.first + that.uv.second*that.uv.second;
-}
-template<Direction_t D>
-bool basic_Wire<D>::operator==(const basic_Wire& that) const {
-	return this->uv == that.uv;
-}
-
-template <class Direction> bool Wire<Direction>::operator>(const Wire& other) const {
-	return it > other;
-}
-template <class Direction> bool Wire<Direction>::operator==(const Wire& other) const{
-	return it == other;
-}
-
-template <class Direction>
-std::expected<Wire<typename Wire<Direction>::OppositeDirection>&, std::string_view> 
-	Wire<Direction>::operator>>(Wire<OppositeDirection>& that) noexcept
+template <auto... args>
+decltype(std::declval<OutWire>().factory)&& OutWire::make_tethered(decltype(args)...)
+requires(std::is_constructible_v<InWire, decltype(args)...>) 
 {
-	this->connected.reset(std::make_unique<Wire<OppositeDirection>>(&that));
-	that.connected.reset(std::make_unique<Wire<OppositeDirection>>(this->connected.get()));
-	return that;
+	this->factory.set_temp_stub(InWire(args...));
+	return std::move(this->factory);
 }
 
-template <class Direction>
-std::expected<float, std::string_view> Wire<Direction>::basic_time_to(const Wire<Direction>&) const noexcept
-{
-	static_assert(g_signalSpeed > 0.f);
-	if(!this->connected.has_value())
-		return std::unexpected("");
-	return std::sqrt(this->it.uv.first * this->it.uv.first + this->*connected.uv.second * this->*connected.uv.second) / g_signalSpeed;
+template <class Base, class Product>
+void WireFactory<Base, Product>::set_temp_stub(const std::any& it) {
+	this->temp_stub = it;
+}
+template <class Base, class Product>
+void WireFactory<Base, Product>::set_stub(const decltype(stub)& it) {
+	this->stub = it;
 }
 
-template <class Direction>
-std::expected<Wire<typename Wire<Direction>::OppositeDirection>&, std::string_view> 
-	Wire<Direction>::make_connect(const std::pair<float, float> newUv) 
-{
-	if(this->connected.has_value())
-		return std::unexpected("Error: One-sided connection change not permitted.");
-	return (this->connected.reset(std::make_unique<Wire<OppositeDirection>>(newUv)));
+template <class Base, class Product>
+WireFactory<Base, Product>::WireFactory(WireFactory&& moved) :owner(moved.owner)
+							     ,stub(moved.stub)
+							     ,temp_stub(std::move(moved.temp_stub)){
 }
 
-template <class Direction>
-std::expected<void, std::string_view> Wire<Direction>::disconnect(){
-	if(!connected.has_value())
-		return
+InWire::InWire(WireFactory<OutWire, InWire>&& that) :InWire(std::any_cast<InWire>(std::forward<std::any>(that.move_temp_stub()))){
+	that.set_stub(*this);
+	this->tethered = that.get_owner();
+}
+OutWire::OutWire(WireFactory<InWire, OutWire>&& that) :factory(*this), tethered(that.get_owner()){
+	that.set_stub(*this);
+}
+
+//template<class Base, class Product>
+//WireFactory<Base, Product>::WireFactory(WireFactory&&) = default;
+
+//InWire from WireFactory<OutWire, InWire>&& ctor
+InWire::InWire(WireFactory<OutWire, InWire>&& stub) :InWire(std::any_cast<InWire>(stub.temp_stub)) {
+	factory.owner = *this;
+	tethered = stub.owner;
+	stub.stub = *this;
+}
+// OutWire from WireFactory<InWire, OutWire>&& ctor
+OutWire::OutWire(WireFactory<InWire, OutWire>&& stub) :factory(*this), tethered(stub.owner){
+	stub.stub = *this;
+}
+// stub.owner.get().tethered = *this;
+
+//template ~WireFactory()
+/*template<class Base, class Product>
+WireFactory<Base, Product>::~WireFactory() {
+	this->owner.get().tethered = this->stub;
 }*/
 
-std::expected<&&, std::string_view> Wire<Derived>::make_tethered(auto... args) requires(is_constructible_to_Wire<Derived>) {
-	return static_cast<Derived>(*this).tethered
-		.and_then(std::unexpected("Error: The connection is taken."))
-		.or_else([&](auto& it){it.reset(); return it = std::make_unique(args...);}()); // void
-}
+template<class Base, class Product>
+WireFactory(Base&) -> WireFactory<Base, std::remove_reference<decltype(std::declval<Base>().tethered.get())>>;//Base, std::conditional<std::is_same_v<Base, InWire>, OutWire, InWire>>
+//requires(std::is_same_v<Base, InWire> || std::is_same_v<Base, OutWire>){};
 
-//TODO Overload an operator= of rvalue reference to
+template<class Base, class Product>
+WireFactory<Base, Product>::WireFactory(Base& base) :owner(base), stub(owner.get().tethered)
+{
+
+}
