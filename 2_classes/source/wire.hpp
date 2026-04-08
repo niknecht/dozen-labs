@@ -1,96 +1,84 @@
-#include <utility>
-#include <functional>
 #include <any>
+#include <functional>
 #include <optional>
 
+class Basic_Wire;
 class InWire;
 class OutWire;
+template<class, class>
+class AXIPacket;
 
-class basic_Wire {
+// Yep, the fourth rewrite, yes, yes, seriously. This one uses AXI4-Stream
+
+class Basic_Wire {
 private:
 	std::pair<float, float> uv;
 public:
-	bool operator==(const basic_Wire&);
-	bool operator> (const basic_Wire&);
-	bool operator<=>(const basic_Wire&);
+	Basic_Wire(std::pair<float, float>) noexcept;
 };
 
 
-// So when a newly created Wire is moved, its destructor is called
-// Before old object is called, the factory's destructor is called
-// ----------------------------------------
-// Than the new object's move constructor is called
-// Referenced in factory object is the old object, moved new object is valid
-// Than the factory's move constructor is called
-//
-// moved new InWire constricted from InWireFactory<OutWire> (has OutWireFactory<InWire>)
-// factory references old InWire location (invalid)
-// need to save new location into the old jowner object
-//
-// Save OutWire into the new InWire, old InWireFactory (turned into InWire, moved), new OutWireFactory
-//
-// usage: InWireInst = OutWire.make_tethered(pairff);
-// make tethered returns rvalue ref to its factory
-// InWire constructor takes that rvalue ref to outwire's factory and 
-// A copies the base to this tethered
-// B uses pairff to create InWire with it
-// C writes this into stub
-// factory destructor writes stub into the OutWire tethered
-
-// Usage: std::declval<Product> = make_tethered(constructor_args);
-// TODO: So, in case I make a new Wire class that would have many connections to different types of wires
-// (Maybe use std::visit)
-template <class Base, class Product>
-class WireFactory {
+class InWire : public Basic_Wire {
+	friend AXIPacket<InWire, OutWire>;
+	using AXIPacket = AXIPacket<InWire, OutWire>;
 private:
-	std::optional<std::reference_wrapper<Base>> owner; // owner is not always knwown at construction
-	std::optional<std::reference_wrapper<Product>> stub; // Wrire tethered to owner source
-	std::any temp_stub; // No can make this Base cause the type is incomplete 
+	//StreamBus<InWire, OutWire> factory;
 public:
-	WireFactory() = default;
-	WireFactory(Base&);
-	WireFactory(WireFactory&&);
+	template<typename... args>
+	InWire(args&&...) noexcept
+	requires(std::is_constructible_v<Basic_Wire, args...>);
 
-	~WireFactory();
+	InWire(InWire&&) = default;
 
-	void set_temp_stub(const std::any&);
-	decltype(temp_stub)&& move_temp_stub();
-	void set_stub(const decltype(stub)&);
-	decltype(owner) get_owner() const noexcept;
+
+	template<typename... args>
+	AXIPacket make_tethered(args&&...)
+	requires(std::is_constructible_v<Basic_Wire, args...>);
+
+	InWire(AXIPacket&&);
 };
 
-class InWire : public basic_Wire {
-	friend WireFactory<InWire, OutWire>;
-	friend OutWire;
+class OutWire : public Basic_Wire {
+	friend AXIPacket<OutWire, InWire>;
+	using AXIPacket = AXIPacket<OutWire, InWire>;
 private:
-	WireFactory<InWire, OutWire> factory;
-	std::reference_wrapper<OutWire> tethered;
+	//StreamBus<OutWire, InWire> factory;
 public:
-	InWire(WireFactory<OutWire, InWire>);
-	InWire(const InWire&);
-	InWire(InWire&&);
+	template<typename... args>
+	OutWire(args&&...) noexcept
+	requires(std::is_constructible_v<Basic_Wire, args...>);
 
-	template<auto... t_args>
-	decltype(factory)&& make_tethered(decltype(t_args)...) // Here the construction is implied
-	requires(std::is_constructible_v<OutWire, decltype(t_args)...>); // Set the stubuv inside WireFactory with constructed.uv
+	OutWire(OutWire&&) = default;
 
-	InWire(WireFactory<OutWire, InWire>&&);
+	template<typename... args>
+	AXIPacket make_tethered(args&&...)
+	requires(std::is_constructible_v<Basic_Wire, args...>);
+
+	OutWire(AXIPacket&&);
 };
 
-class OutWire : public basic_Wire {
-	friend WireFactory<OutWire, InWire>;
-	friend InWire;
+// Make In/OutWire constructible from whareve BasicWire is constructible from
+
+// This is also class agnostic, so you can create whaterever new wires, by just passing either std::any to Product
+// TODO Implement whatever I just wrote above with std::visit prolly
+template <class Base, class Product> // <slave, master>
+class AXIPacket { // AXI-S protocol Valcum tu FPGA
 private:
-	WireFactory<OutWire, InWire> factory;
-	std::reference_wrapper<InWire> tethered;
+	Product slub; // TUSER
+	std::optional<std::reference_wrapper<Base>> slave; // TUSER + TREADY -> set on create
+	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> destruction whenever there's a handshake
+	// Newly created Wire transmitts its adress to the old slave
 public:
-	OutWire(WireFactory<InWire, OutWire>);
-	OutWire(const OutWire&);
-	OutWire(OutWire&&);
+	decltype(slub) get_slub() const noexcept;
+	decltype(slave) get_reciever() const noexcept;
+	decltype(master) get_transmitter() const noexcept;
 
-	template<auto... t_args>
-	decltype(factory)&& make_tethered(decltype(t_args)...)
-	requires(std::is_constructible_v<InWire, decltype(t_args)...>);
+	template<typename... args>
+	AXIPacket(Base&, args...)
+	requires(std::is_constructible_v<Product, args...>);
 
-	OutWire(WireFactory<InWire, OutWire>&&);
+	AXIPacket(AXIPacket&&); // Do I want to move an optional that is a reference_wrapper?
+	AXIPacket(const AXIPacket&);
+
+	~AXIPacket();
 };

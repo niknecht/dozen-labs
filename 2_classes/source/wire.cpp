@@ -1,76 +1,43 @@
 #include "wire.hpp"
 
-#include <type_traits>
+Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv(arg)
+{}
 
-template <class Base, class Product>
-WireFactory<Base, Product>::WireFactory(Base& base) :owner{base}{
-}
-
-template <auto... args>
-decltype(std::declval<InWire>().factory)&& InWire::make_tethered(decltype(args)...)
-requires(std::is_constructible_v<OutWire, decltype(args)...>) 
+template<typename... t_args>
+InWire::InWire(t_args&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forward<t_args>(args)...)
 {
-	this->factory.set_temp_stub(OutWire(args...));
-	return std::move(this->factory);
 }
-template <auto... args>
-decltype(std::declval<OutWire>().factory)&& OutWire::make_tethered(decltype(args)...)
-requires(std::is_constructible_v<InWire, decltype(args)...>) 
+
+template<typename... t_args>
+OutWire::OutWire(t_args&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forward<t_args>(args)...)
+{}
+
+template<typename... t_args>
+AXIPacket<InWire, OutWire> InWire::make_tethered(t_args&&... args)
+requires(std::is_constructible_v<Basic_Wire, t_args...>)
 {
-	this->factory.set_temp_stub(InWire(args...));
-	return std::move(this->factory);
+	return AXIPacket{*this, args...};
 }
-
-template <class Base, class Product>
-void WireFactory<Base, Product>::set_temp_stub(const std::any& it) {
-	this->temp_stub = it;
+template<typename... t_args>
+AXIPacket<OutWire, InWire> OutWire::make_tethered(t_args&&... args)
+requires(std::is_constructible_v<Basic_Wire, t_args...>) 
+{
+	return AXIPacket{*this, args...};
 }
-template <class Base, class Product>
-void WireFactory<Base, Product>::set_stub(const decltype(stub)& it) {
-	this->stub = it;
-}
-
-template <class Base, class Product>
-WireFactory<Base, Product>::WireFactory(WireFactory&& moved) :owner(moved.owner)
-							     ,stub(moved.stub)
-							     ,temp_stub(std::move(moved.temp_stub)){
-}
-
-InWire::InWire(WireFactory<OutWire, InWire>&& that) :InWire(std::any_cast<InWire>(std::forward<std::any>(that.move_temp_stub()))){
-	that.set_stub(*this);
-	this->tethered = that.get_owner();
-}
-OutWire::OutWire(WireFactory<InWire, OutWire>&& that) :factory(*this), tethered(that.get_owner()){
-	that.set_stub(*this);
-}
-
-//template<class Base, class Product>
-//WireFactory<Base, Product>::WireFactory(WireFactory&&) = default;
-
-//InWire from WireFactory<OutWire, InWire>&& ctor
-InWire::InWire(WireFactory<OutWire, InWire>&& stub) :InWire(std::any_cast<InWire>(stub.temp_stub)) {
-	factory.owner = *this;
-	tethered = stub.owner;
-	stub.stub = *this;
-}
-// OutWire from WireFactory<InWire, OutWire>&& ctor
-OutWire::OutWire(WireFactory<InWire, OutWire>&& stub) :factory(*this), tethered(stub.owner){
-	stub.stub = *this;
-}
-// stub.owner.get().tethered = *this;
-
-//template ~WireFactory()
-/*template<class Base, class Product>
-WireFactory<Base, Product>::~WireFactory() {
-	this->owner.get().tethered = this->stub;
-}*/
 
 template<class Base, class Product>
-WireFactory(Base&) -> WireFactory<Base, std::remove_reference<decltype(std::declval<Base>().tethered.get())>>;//Base, std::conditional<std::is_same_v<Base, InWire>, OutWire, InWire>>
-//requires(std::is_same_v<Base, InWire> || std::is_same_v<Base, OutWire>){};
+template<typename... t_args>
+AXIPacket<Base, Product>::AXIPacket(Base&, t_args... args)
+requires(std::is_constructible_v<Product, t_args...>) : slub(args...)
+{
+}
 
 template<class Base, class Product>
-WireFactory<Base, Product>::WireFactory(Base& base) :owner(base), stub(owner.get().tethered)
-{
+AXIPacket<Base, Product>::AXIPacket(AXIPacket&&)
+{}
 
-}
+template<class Base, class Product>
+AXIPacket<Base, Product>::AXIPacket(const AXIPacket& other) : slub(other.slub)
+{}
