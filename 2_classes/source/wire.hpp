@@ -31,9 +31,9 @@ public:
 	InWire(InWire&&) = default;
 
 
-	template<typename... args>
-	AXIPacket make_tethered(args&&...)
-	requires(std::is_constructible_v<Basic_Wire, args...>);
+	template<typename... t_args>
+	AXIPacket make_tethered(t_args&&...)
+	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
 	InWire(AXIPacket&&);
 };
@@ -44,15 +44,15 @@ class OutWire : public Basic_Wire {
 private:
 	//StreamBus<OutWire, InWire> factory;
 public:
-	template<typename... args>
-	OutWire(args&&...) noexcept
-	requires(std::is_constructible_v<Basic_Wire, args...>);
+	template<typename... t_args>
+	OutWire(t_args&&...) noexcept
+	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
 	OutWire(OutWire&&) = default;
 
-	template<typename... args>
-	AXIPacket make_tethered(args&&...)
-	requires(std::is_constructible_v<Basic_Wire, args...>);
+	template<typename... t_args>
+	AXIPacket make_tethered(t_args&&...)
+	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
 	OutWire(AXIPacket&&);
 };
@@ -66,19 +66,19 @@ class AXIPacket { // AXI-S protocol Valcum tu FPGA
 private:
 	Product slub; // TUSER
 	std::optional<std::reference_wrapper<Base>> slave; // TUSER + TREADY -> set on create
-	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> destruction whenever there's a handshake
+	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	decltype(slub) get_slub() const noexcept;
-	decltype(slave) get_reciever() const noexcept;
-	decltype(master) get_transmitter() const noexcept;
-
-	template<typename... args>
-	AXIPacket(Base&, args...)
-	requires(std::is_constructible_v<Product, args...>);
+	const decltype(slub)& get_slub() const noexcept;
+	const decltype(slave.value()) get_reciever() const noexcept(false); // Use expected for incorrect ABI usage
+	const decltype(master.value()) get_transmitter() const noexcept(false); // Use exceptions for design errors within the Wire classes
+										// Specifically here, just exit if this gets thrown, or leave unhandeled
+	template<typename... t_args>
+	AXIPacket(Base&, t_args&&...)
+	requires(std::is_constructible_v<Product, t_args...>);
 
 	AXIPacket(AXIPacket&&); // Do I want to move an optional that is a reference_wrapper?
-	AXIPacket(const AXIPacket&);
+	AXIPacket(const AXIPacket&) = default;
 
 	~AXIPacket();
 };
