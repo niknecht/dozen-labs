@@ -22,17 +22,15 @@ class InWire : public Basic_Wire {
 	friend AXIPacket<InWire, OutWire>;
 	using AXIPacket = AXIPacket<InWire, OutWire>;
 private:
-	//StreamBus<InWire, OutWire> factory;
 public:
 	template<typename... t_args>
 	InWire(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
-	//InWire(const InWire&) = default;
 	InWire(InWire&&) = default;
 
 	template<typename... t_args>
-	AXIPacket make_tethered(t_args&&...)
+	AXIPacket make_tethered(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
 	InWire(::AXIPacket<OutWire, InWire>&&);
@@ -42,17 +40,15 @@ class OutWire : public Basic_Wire {
 	friend AXIPacket<OutWire, InWire>;
 	using AXIPacket = AXIPacket<OutWire, InWire>;
 private:
-	//StreamBus<OutWire, InWire> factory;
 public:
 	template<typename... t_args>
 	OutWire(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
-	//OutWire(const OutWire&);
 	OutWire(OutWire&&) = default;
 
 	template<typename... t_args>
-	AXIPacket make_tethered(t_args&&...)
+	AXIPacket make_tethered(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
 	OutWire(::AXIPacket<InWire, OutWire>&&);
@@ -70,10 +66,9 @@ private:
 	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	const decltype(slub)&         get_slub() const noexcept;
-	const decltype(slave.value()) get_reciever() const noexcept(false); // Use expected for incorrect ABI usage
-	void     set_transmitter(const decltype(master)) const noexcept(false); // Use exceptions for design errors within the Wire classes
-										// Specifically here, just exit if this gets thrown, or leave unhandeled
+	auto get_slub() const noexcept -> const decltype(slub)&;  // Use expected for incorrect ABI usage
+	void set_transmitter(const decltype(master)) noexcept;   // Use exceptions for design errors within the Wire classes
+								// Specifically here, there's nothing to go wrong
 	template<typename... t_args>
 	AXIPacket(Base&, t_args&&...)
 	requires(std::is_constructible_v<Product, t_args...>);

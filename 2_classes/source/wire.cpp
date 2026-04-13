@@ -15,13 +15,13 @@ requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forwa
 {}
 
 template<typename... t_args>
-AXIPacket<InWire, OutWire> InWire::make_tethered(t_args&&... args)
+AXIPacket<InWire, OutWire> InWire::make_tethered(t_args&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, t_args...>)
 {
 	return AXIPacket{*this, std::forward<t_args>(args)...}; // RVO
 }
 template<typename... t_args>
-AXIPacket<OutWire, InWire> OutWire::make_tethered(t_args&&... args)
+AXIPacket<OutWire, InWire> OutWire::make_tethered(t_args&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, t_args...>) 
 {
 	return AXIPacket{*this, std::forward<t_args>(args)...}; // RVO
@@ -58,3 +58,13 @@ AXIPacket<Base, Product>::~AXIPacket() { // Clock!
 // make_tethered returns axi_packet (owns slub)
 // move the axi_packet into newwire ctor arg from the appropriate/applicable axi_packet
 // and you're done
+
+template<class Base, class Product>
+auto AXIPacket<Base, Product>::get_slub() const noexcept-> const decltype(slub)& { //noexcept
+	return this->slub;
+}
+
+template<class Base, class Product>
+void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster) noexcept {
+	this->master = trueMaster;
+}

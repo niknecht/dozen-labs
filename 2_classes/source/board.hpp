@@ -1,4 +1,4 @@
-#include "wire.hpp"
+/*#include "wire.hpp"
 
 #include <vector>
 #include <span>
@@ -14,4 +14,4 @@ public:
 	explicit Board(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
 
 	Board& operator+=(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
-};
+};(\*/
