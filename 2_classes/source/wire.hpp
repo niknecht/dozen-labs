@@ -35,7 +35,7 @@ public:
 	AXIPacket make_tethered(t_args&&...)
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
-	InWire(const ::AXIPacket<OutWire, InWire>&&);
+	InWire(::AXIPacket<OutWire, InWire>&&);
 };
 
 class OutWire : public Basic_Wire {
