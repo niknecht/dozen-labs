@@ -24,18 +24,18 @@ class InWire : public Basic_Wire {
 private:
 	//StreamBus<InWire, OutWire> factory;
 public:
-	template<typename... args>
-	InWire(args&&...) noexcept
-	requires(std::is_constructible_v<Basic_Wire, args...>);
+	template<typename... t_args>
+	InWire(t_args&&...) noexcept
+	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
+	//InWire(const InWire&) = default;
 	InWire(InWire&&) = default;
-
 
 	template<typename... t_args>
 	AXIPacket make_tethered(t_args&&...)
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
-	InWire(AXIPacket&&);
+	InWire(const ::AXIPacket<OutWire, InWire>&&);
 };
 
 class OutWire : public Basic_Wire {
@@ -48,13 +48,14 @@ public:
 	OutWire(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
+	//OutWire(const OutWire&);
 	OutWire(OutWire&&) = default;
 
 	template<typename... t_args>
 	AXIPacket make_tethered(t_args&&...)
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
-	OutWire(AXIPacket&&);
+	OutWire(::AXIPacket<InWire, OutWire>&&);
 };
 
 // Make In/OutWire constructible from whareve BasicWire is constructible from
@@ -69,9 +70,9 @@ private:
 	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	const decltype(slub)& get_slub() const noexcept;
+	const decltype(slub)&         get_slub() const noexcept;
 	const decltype(slave.value()) get_reciever() const noexcept(false); // Use expected for incorrect ABI usage
-	const decltype(master.value()) get_transmitter() const noexcept(false); // Use exceptions for design errors within the Wire classes
+	void     set_transmitter(const decltype(master)) const noexcept(false); // Use exceptions for design errors within the Wire classes
 										// Specifically here, just exit if this gets thrown, or leave unhandeled
 	template<typename... t_args>
 	AXIPacket(Base&, t_args&&...)
