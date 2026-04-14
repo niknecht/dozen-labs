@@ -1,6 +1,8 @@
 #include <any>
 #include <functional>
 #include <optional>
+#include <string_view>
+#include <expected>
 
 class Basic_Wire;
 class InWire;
@@ -22,6 +24,7 @@ class InWire : public Basic_Wire {
 	friend AXIPacket<InWire, OutWire>;
 	using AXIPacket = AXIPacket<InWire, OutWire>;
 private:
+	std::optional<std::reference_wrapper<OutWire>> tethered;
 public:
 	template<typename... t_args>
 	InWire(t_args&&...) noexcept
@@ -33,6 +36,11 @@ public:
 	AXIPacket make_tethered(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
 
+	bool is_tethered() const noexcept;
+	OutWire& operator>> (OutWire& other);
+	InWire& connect(OutWire&);
+	std::expected<void, std::string_view> disconnect();
+
 	InWire(::AXIPacket<OutWire, InWire>&&);
 };
 
@@ -40,6 +48,7 @@ class OutWire : public Basic_Wire {
 	friend AXIPacket<OutWire, InWire>;
 	using AXIPacket = AXIPacket<OutWire, InWire>;
 private:
+	std::optional<std::reference_wrapper<InWire>> tethered;
 public:
 	template<typename... t_args>
 	OutWire(t_args&&...) noexcept
@@ -50,6 +59,11 @@ public:
 	template<typename... t_args>
 	AXIPacket make_tethered(t_args&&...) noexcept
 	requires(std::is_constructible_v<Basic_Wire, t_args...>);
+
+	bool is_tethered() const noexcept;
+	InWire& operator>> (InWire& other);
+	OutWire& connect(InWire&);
+	std::expected<void, std::string_view> disconnect();
 
 	OutWire(::AXIPacket<InWire, OutWire>&&);
 };

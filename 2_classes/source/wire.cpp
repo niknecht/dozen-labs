@@ -4,7 +4,7 @@ Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv(arg)
 {}
 
 template<typename... t_args>
-InWire::InWire(t_args&&... args) noexcept // Args outlive the functon call
+InWire::InWire(t_args&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forward<t_args>(args)...)
 {
 }
@@ -49,7 +49,7 @@ OutWire::OutWire(::AXIPacket<InWire, OutWire>&& pkt) : OutWire(std::move(pkt.get
 }
 
 template <class Base, class Product>
-AXIPacket<Base, Product>::~AXIPacket() { // Clock!
+AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
 	if(master && slave)
 		slave.get().tethered = this->slub;
 }
@@ -67,4 +67,54 @@ auto AXIPacket<Base, Product>::get_slub() const noexcept-> const decltype(slub)&
 template<class Base, class Product>
 void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster) noexcept {
 	this->master = trueMaster;
+}
+
+OutWire& OutWire::connect(InWire& other) {
+	this->tethered = other;
+	return *this;
+}
+InWire& InWire::connect(OutWire& other) {
+	this->tethered = other;
+	return *this;
+}
+
+InWire& OutWire::operator>> (InWire& other) {
+	this->connect(other);
+	other.connect(*this);
+	return other;
+}
+OutWire& InWire::operator>> (OutWire& other) {
+	this->connect(other);
+	other.connect(*this);
+	return other;
+}
+
+bool InWire::is_tethered() const noexcept {
+	return static_cast<bool>(tethered);
+}
+bool OutWire::is_tethered() const noexcept {
+	return static_cast<bool>(tethered);
+}
+
+std::expected<void, std::string_view> OutWire::disconnect() {
+	using namespace std::literals::string_view_literals;
+
+	if(!tethered) 
+		return std::unexpected("Attempt to break a non-existent connection."sv);
+	else
+		if(tethered.value().get().is_tethered())
+			return this->tethered.reset(), tethered.value().get().disconnect();
+	
+	return {};
+}
+std::expected<void, std::string_view> InWire::disconnect() {
+	using namespace std::literals::string_view_literals;
+
+	if(!tethered) 
+		return std::unexpected("Attempt to break a non-existent connection."sv);
+	else
+		if(tethered.value().get().is_tethered())
+			return this->tethered.reset(), tethered.value().get().disconnect();
+	
+	return {};
 }

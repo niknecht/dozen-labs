@@ -1,17 +1,29 @@
-/*#include "wire.hpp"
+#include "wire.hpp"
 
-#include <vector>
 #include <span>
 #include <variant>
+#include <vector>
+#include <expected>
+#include <string_view>
 
 class Board {
 private:
-	std::vector<std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>> interconnect;
-
+	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
-	Board() = delete;
-	explicit Board(std::span<std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>> interconnect_src);
-	explicit Board(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
+	Board(std::span<std::variant<InWire, OutWire>>);
+	Board(std::variant<InWire, OutWire>&&); // std::forward into the agreggate constructor
 
-	Board& operator+=(const std::variant<Wire<basic_InWire>, Wire<basic_OutWire>>&);
-};(\*/
+	Board& operator+=(std::variant<InWire, OutWire>&&);
+
+	std::expected<std::variant<InWire, OutWire>, std::string_view> operator[](const size_t) noexcept;
+
+	std::expected<void, std::string_view> add_link(const size_t , const size_t) noexcept;
+
+	std::expected<void, std::string_view> rm_link(const size_t) noexcept;
+
+	std::expected<void, std::string_view> remove(const size_t) noexcept;
+
+	std::expected<void, std::string_view> sort();
+
+	std::expected<void, std::string_view> move(const size_t src, const std::pair<float, float>) noexcept;
+};
