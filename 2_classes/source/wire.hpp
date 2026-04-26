@@ -38,7 +38,7 @@ public:
 
 	bool is_tethered() const noexcept;
 	OutWire& operator>> (OutWire& other);
-	InWire& connect(OutWire&);
+	InWire& connect(OutWire&); // Agh, shoulda called it intgrate
 	std::expected<void, std::string_view> disconnect();
 
 	InWire(::AXIPacket<OutWire, InWire>&&);

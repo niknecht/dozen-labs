@@ -10,20 +10,31 @@ class Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
-	Board(std::span<std::variant<InWire, OutWire>>);
-	Board(std::variant<InWire, OutWire>&&); // std::forward into the agreggate constructor
+	Board(const Board& other) = default;
+	Board(Board&& other);
+	Board& operator= (const Board&) = default;
+	Board&& operator= (Board&&);
 
-	Board& operator+=(std::variant<InWire, OutWire>&&);
+	~Board() = default;
 
-	std::expected<std::variant<InWire, OutWire>, std::string_view> operator[](const size_t) noexcept;
+	template <std::ranges::viewable_range  t_R>
+	Board(t_R&& r);
+	//Board(std::variant<InWire, OutWire>&&); // std::forward into the agreggate constructor
 
-	std::expected<void, std::string_view> add_link(const size_t , const size_t) noexcept;
+	auto operator+=(this auto&& self, std::variant<InWire, OutWire>&&) -> decltype(auto); // rationale: intent to return ref to this, category should be preserved
 
-	std::expected<void, std::string_view> rm_link(const size_t) noexcept;
+	auto operator[](this auto&& self, const size_t) noexcept -> decltype(auto); // accesing temporary's member should enable move
+
+	std::expected<void, std::string_view> add_link(const size_t , const size_t) noexcept; // Reference collapsing +
+
+	std::expected<void, std::string_view> rm_link(const size_t) noexcept;	// + deducing this
 
 	std::expected<void, std::string_view> remove(const size_t) noexcept;
 
 	std::expected<void, std::string_view> sort();
 
-	std::expected<void, std::string_view> move(const size_t src, const std::pair<float, float>) noexcept;
+	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>) noexcept;
+
+	template <class ...Ts>
+	struct overloads : Ts... {using Ts::operator()...;}; // See std::variant<...Type>::visit example on cppreference.com
 };
