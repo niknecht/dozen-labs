@@ -1,36 +1,42 @@
 #include "wire.hpp"
+#include <cmath>
 
 Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv(arg)
 {}
 
-template<typename... t_args>
-InWire::InWire(t_args&&... args) noexcept
-requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forward<t_args>(args)...)
+bool Basic_Wire::operator<(const Basic_Wire& other) const {
+	const auto& [x,y] = uv;
+	const auto& [x1, y1] = other.uv;
+	constexpr auto mod = [](const decltype(uv.first)& x, const decltype(uv.second)& y){ return x*x + y*y;};
+	return mod(x, y) < mod(x1, y1);
+}
+bool Basic_Wire::operator==(const Basic_Wire& other) const {
+	return uv == other.uv;
+}
+
+InWire::InWire(auto&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 {
 }
 
-template<typename... t_args>
-OutWire::OutWire(t_args&&... args) noexcept // Standard forwarding constructor (idk, blame chatgpt)
-requires(std::is_constructible_v<Basic_Wire, t_args...>) : Basic_Wire(std::forward<t_args>(args)...)
+OutWire::OutWire(auto&&... args) noexcept // Standard forwarding constructor (idk, blame chatgpt)
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 {}
 
-template<typename... t_args>
-AXIPacket<InWire, OutWire> InWire::make_tethered(t_args&&... args) noexcept
-requires(std::is_constructible_v<Basic_Wire, t_args...>)
+AXIPacket<InWire, OutWire> InWire::make_tethered(auto&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>)
 {
-	return AXIPacket{*this, std::forward<t_args>(args)...}; // RVO
+	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
 }
-template<typename... t_args>
-AXIPacket<OutWire, InWire> OutWire::make_tethered(t_args&&... args) noexcept
-requires(std::is_constructible_v<Basic_Wire, t_args...>) 
+AXIPacket<OutWire, InWire> OutWire::make_tethered(auto&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) 
 {
-	return AXIPacket{*this, std::forward<t_args>(args)...}; // RVO
+	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
 }
 
 template<class Base, class Product>
-template<typename... t_args>
-AXIPacket<Base, Product>::AXIPacket(Base& owner, t_args&&... args)
-requires(std::is_constructible_v<Product, t_args...>) : slave(owner), slub(std::forward<t_args>(args)...)
+AXIPacket<Base, Product>::AXIPacket(Base& owner, auto&&... args)
+requires(std::is_constructible_v<Product, decltype(args)...>) : slave(owner), slub(std::forward<decltype(args)>(args)...)
 {
 }
 
@@ -60,8 +66,8 @@ AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
 // and you're done
 
 template<class Base, class Product>
-auto AXIPacket<Base, Product>::get_slub() const noexcept-> const decltype(slub)& { //noexcept
-	return this->slub;
+auto AXIPacket<Base, Product>::get_slub(this auto&&  self) noexcept-> const decltype(slub)& { //noexcept
+	return std::forward<std::remove_reference_t<decltype(self)>>(self).slub;
 }
 
 template<class Base, class Product>
@@ -69,21 +75,26 @@ void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster
 	this->master = trueMaster;
 }
 
-OutWire& OutWire::connect(InWire& other) {
+OutWire& OutWire::connect(InWire& other) noexcept{
 	this->tethered = other;
 	return *this;
 }
-InWire& InWire::connect(OutWire& other) {
+InWire& InWire::connect(OutWire& other) noexcept {
 	this->tethered = other;
 	return *this;
 }
 
-InWire& OutWire::operator>> (InWire& other) {
+std::expected<std::reference_wrapper<InWire>, std::string_view> OutWire::operator>> (InWire& other) noexcept{
+	using namespace std::string_view_literals;
+	if(this->is_tethered() || other.is_tethered())
+		return std::unexpected("Attemted reconnect before disconnecting."sv);
 	this->connect(other);
 	other.connect(*this);
 	return other;
 }
-OutWire& InWire::operator>> (OutWire& other) {
+std::expected<std::reference_wrapper<OutWire>, std::string_view> InWire::operator>> (OutWire& other) noexcept{
+	if(this->is_tethered() || other.is_tethered())
+		return std::unexpected("Attemted reconnect before disconnecting.");
 	this->connect(other);
 	other.connect(*this);
 	return other;
@@ -104,10 +115,11 @@ std::expected<void, std::string_view> OutWire::disconnect() {
 	else
 		if(tethered.value().get().is_tethered())
 			return this->tethered.reset(), tethered.value().get().disconnect();
+		else throw "\nCritical Design Error: Assimetrical connection\n"sv;
 	
 	return {};
 }
-std::expected<void, std::string_view> InWire::disconnect() {
+std::expected<void, std::string_view> InWire::disconnect(){
 	using namespace std::literals::string_view_literals;
 
 	if(!tethered) 
@@ -115,6 +127,7 @@ std::expected<void, std::string_view> InWire::disconnect() {
 	else
 		if(tethered.value().get().is_tethered())
 			return this->tethered.reset(), tethered.value().get().disconnect();
+		else throw "\nCritical Design Error: Assimetrical connection\n"sv;
 	
 	return {};
 }

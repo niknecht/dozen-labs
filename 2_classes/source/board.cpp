@@ -3,6 +3,7 @@
 #include <ranges>
 #include <utility>
 #include <algorithm>
+#include <iterator>
 
 //Board::Board(Board&& other) : interconnect((std::span(other.interconnect) | std::ranges::move) | std::ranges::to<decltype(interconnect)>)
 //		{}
@@ -50,5 +51,10 @@ std::expected<void, std::string_view> Board::rm_link(const size_t lhs) noexcept 
 }
 
 std::expected<void, std::string_view> Board::remove(const size_t it) noexcept {
-	return this->rm_link(it).and_then([](auto a){});
+	using namespace std::string_view_literals;
+	if (it < interconnect.size())
+		return this->rm_link(it).and_then([]()-> std::expected<void, std::string_view>{
+				interconnect.erase(interconnect.begin() + 5);
+			});
+	else return std::unexpected(""sv);
 }
