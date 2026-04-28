@@ -4,6 +4,8 @@
 #include <utility>
 #include <algorithm>
 
+using namespace circuit;
+
 //Board::Board(Board&& other) noexcept : interconnect{std::forward<Board>(other).interconnect}
 //		{}
 

@@ -5,7 +5,11 @@
 #include <expected>
 #include <string_view>
 
-class Board {
+namespace circuit{
+	class Board;
+}
+
+class circuit::Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
