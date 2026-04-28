@@ -3,9 +3,8 @@
 #include <ranges>
 #include <utility>
 #include <algorithm>
-#include <iterator>
 
-//Board::Board(Board&& other) : interconnect((std::span(other.interconnect) | std::ranges::move) | std::ranges::to<decltype(interconnect)>)
+//Board::Board(Board&& other) noexcept : interconnect{std::forward<Board>(other).interconnect}
 //		{}
 
 template <std::ranges::viewable_range t_R>
@@ -18,17 +17,17 @@ auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> 
 	return std::forward<std::remove_reference_t<decltype(self)>>(self);
 }
 
-auto Board::operator[](this auto&& self, const size_t i) noexcept 
+auto Board::operator[](this auto&& self, const size_t i)
 -> decltype(auto)
  {
 	using namespace std::string_view_literals;
 	if (i < self.interconnect.size())
-	    return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i]; // Both this and the one below should be correct returns, but this one's shorter
+	    return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i); // Both this and the one below should be correct returns, but this one's shorter
 		//std::forward_like<decltype(self)>(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i])
-	else return std::unexpected("Requested element is out-of-bounds."sv); // TODO Throw out_of_bounds here
+	else return std::unexpected("Requested element is out-of-bounds."sv);
 }
 
-std::expected <void, std::string_view> Board::add_link(const size_t lhs, const size_t rhs) noexcept { // TODO Add C++23 conditionals to noexcept
+std::expected <void, std::string_view> Board::add_link(const size_t lhs, const size_t rhs) {
 	using namespace std::string_view_literals;
 
 	auto [first, second] = std::minmax(lhs, rhs);
@@ -38,18 +37,21 @@ std::expected <void, std::string_view> Board::add_link(const size_t lhs, const s
 		if(f.index() == s.index()) return std::unexpected("Connect operands type mismatch"sv);
 		auto visitor = overloads{
 			[prhs = &s](InWire& lhs){return lhs >> std::get<OutWire>(*prhs);},
-			[prhs = &s](OutWire& lhs){return lhs >> std::get<InWire>(*prhs);} // TODO Make connect() return an expected Board& and an unexpected if already connected
+			[prhs = &s](OutWire& lhs){return lhs >> std::get<InWire>(*prhs);}
 		};
 		return std::visit(visitor, f);
 	}
-	else return std::unexpected("Requested element is out-of-bounds."sv); // TODO Throw out_of_bounds here
+	else {
+		throw std::out_of_range("Out of bounds on interconnect look-up");
+		return std::unexpected("Requested element is out-of-bounds."sv);
+	}
 }
 
-std::expected<void, std::string_view> Board::rm_link(const size_t lhs) noexcept {
+std::expected<void, std::string_view> Board::rm_link(const size_t lhs) {
 	return std::visit(overloads([](auto& wire){return wire.disconnect();}), interconnect[lhs]);
 }
 
-std::expected<void, std::string_view> Board::remove(const size_t it) noexcept {
+std::expected<void, std::string_view> Board::remove(const size_t it) {
 	using namespace std::string_view_literals;
 	if (it < interconnect.size())
 		return this->rm_link(it)
@@ -57,17 +59,22 @@ std::expected<void, std::string_view> Board::remove(const size_t it) noexcept {
 				interconnect.erase(interconnect.begin() + 5);
 				return {};
 			});
-	else return std::unexpected(""sv);
+	else {
+		throw std::out_of_range("Out of bounds interconnect look-up");
+		return std::unexpected("Requested element is out-of-bounds"sv);
+	}
 }
 
 void Board::sort() {
 	std::sort(interconnect.begin(), interconnect.end());
 }
 
-std::expected<void, std::string_view> Board::moveuv(const size_t src, const std::pair<float, float>) noexcept {
+std::expected<void, std::string_view> Board::moveuv(const size_t src, const std::pair<float, float> newuv) {
 	using namespace std::string_view_literals;
-	if(src >= interconnect.size())
-		return  std::unexpected("Requested object is out of bounds"sv); // TODO Throw here
+	if(src < interconnect.size())
+		return std::visit(overloads{[newuv](auto& wire) {return wire.moveuv(newuv);}}, interconnect[src]);
+	else {
+		throw std::out_of_range("Out-of-bounds inteerconnect look-up");
+		return  std::unexpected("Requested object is out of bounds"sv);
+	}
 }
-
-// TODO: Rule of 5 for the Board class

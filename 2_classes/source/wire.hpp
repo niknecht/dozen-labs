@@ -25,6 +25,8 @@ public:
 	bool operator<(const Basic_Wire&) const;
 	bool operator==(const Basic_Wire&) const;
 	bool operator<=>(const Basic_Wire&) const = default;
+
+	std::expected<void, std::string_view> moveuv(std::pair<float, float> newuv);
 };
 
 
