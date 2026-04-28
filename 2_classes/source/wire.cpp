@@ -84,20 +84,20 @@ InWire& InWire::connect(OutWire& other) noexcept {
 	return *this;
 }
 
-std::expected<std::reference_wrapper<InWire>, std::string_view> OutWire::operator>> (InWire& other) noexcept{
+std::expected<void, std::string_view> OutWire::operator>> (InWire& other) noexcept{  // erference_wrapper<InWire
 	using namespace std::string_view_literals;
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting."sv);
 	this->connect(other);
 	other.connect(*this);
-	return other;
+	return {};
 }
-std::expected<std::reference_wrapper<OutWire>, std::string_view> InWire::operator>> (OutWire& other) noexcept{
+std::expected<void, std::string_view> InWire::operator>> (OutWire& other) noexcept{
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting.");
 	this->connect(other);
 	other.connect(*this);
-	return other;
+	return {};
 }
 
 bool InWire::is_tethered() const noexcept {

@@ -16,6 +16,7 @@ private:
 	std::pair<float, float> uv;
 public:
 	Basic_Wire(std::pair<float, float>) noexcept;
+
 	Basic_Wire(Basic_Wire&&) = default; // This is just std::pair reallistically
 	Basic_Wire(const Basic_Wire&) = default;
 	Basic_Wire& operator=(const Basic_Wire&) = default;
@@ -41,12 +42,14 @@ public:
 
 	InWire(InWire&&) = default;
 	InWire(const InWire&) = default;
+	InWire& operator=(const InWire&) = default;
+	InWire& operator=(InWire&&) = default;
 
 	AXIPacket make_tethered(auto&&... args) noexcept
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
 
 	bool is_tethered() const noexcept;
-	std::expected<std::reference_wrapper<OutWire>, std::string_view> operator>> (OutWire& other) noexcept; // TODO Add C++23 conditional noexcept here and everywhere else
+	std::expected<void, std::string_view> operator>> (OutWire& other) noexcept; // TODO Add C++23 conditional noexcept here and everywhere else
 	std::expected<void, std::string_view> disconnect();
 
 	InWire(::AXIPacket<OutWire, InWire>&&);
@@ -65,12 +68,15 @@ public:
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
 
 	OutWire(OutWire&&) = default;
+	OutWire(const OutWire&) = default;
+	OutWire& operator=(const OutWire&) = default;
+	OutWire& operator=(OutWire&&) = default;
 
 	AXIPacket make_tethered(auto&&... args) noexcept
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
 
 	bool is_tethered() const noexcept;
-	std::expected<std::reference_wrapper<InWire>, std::string_view> operator>> (InWire& other) noexcept;
+	std::expected<void, std::string_view> operator>> (InWire& other) noexcept;
 	std::expected<void, std::string_view> disconnect();
 
 	OutWire(::AXIPacket<InWire, OutWire>&&);

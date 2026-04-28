@@ -25,7 +25,7 @@ auto Board::operator[](this auto&& self, const size_t i) noexcept
 	if (i < self.interconnect.size())
 	    return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i]; // Both this and the one below should be correct returns, but this one's shorter
 		//std::forward_like<decltype(self)>(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i])
-	else return std::unexpected("Requested element is out-of-bounds."sv);
+	else return std::unexpected("Requested element is out-of-bounds."sv); // TODO Throw out_of_bounds here
 }
 
 std::expected <void, std::string_view> Board::add_link(const size_t lhs, const size_t rhs) noexcept { // TODO Add C++23 conditionals to noexcept
@@ -37,13 +37,12 @@ std::expected <void, std::string_view> Board::add_link(const size_t lhs, const s
 		auto& s = interconnect[rhs];
 		if(f.index() == s.index()) return std::unexpected("Connect operands type mismatch"sv);
 		auto visitor = overloads{
-			[prhs = &s](InWire& lhs){lhs.connect(std::get<OutWire>(*prhs));},
-			[prhs = &s](OutWire& lhs){lhs.connect(std::get<InWire>(*prhs));} // TODO Make connect() return an expected Board& and an unexpected if already connected
+			[prhs = &s](InWire& lhs){return lhs >> std::get<OutWire>(*prhs);},
+			[prhs = &s](OutWire& lhs){return lhs >> std::get<InWire>(*prhs);} // TODO Make connect() return an expected Board& and an unexpected if already connected
 		};
-		std::visit(visitor, f);
-		return {};
+		return std::visit(visitor, f);
 	}
-	else return std::unexpected("Requested element is out-of-bounds."sv);
+	else return std::unexpected("Requested element is out-of-bounds."sv); // TODO Throw out_of_bounds here
 }
 
 std::expected<void, std::string_view> Board::rm_link(const size_t lhs) noexcept {
@@ -53,8 +52,22 @@ std::expected<void, std::string_view> Board::rm_link(const size_t lhs) noexcept 
 std::expected<void, std::string_view> Board::remove(const size_t it) noexcept {
 	using namespace std::string_view_literals;
 	if (it < interconnect.size())
-		return this->rm_link(it).and_then([]()-> std::expected<void, std::string_view>{
+		return this->rm_link(it)
+			.and_then([this]()-> std::expected<void, std::string_view>{
 				interconnect.erase(interconnect.begin() + 5);
+				return {};
 			});
 	else return std::unexpected(""sv);
 }
+
+void Board::sort() {
+	std::sort(interconnect.begin(), interconnect.end());
+}
+
+std::expected<void, std::string_view> Board::moveuv(const size_t src, const std::pair<float, float>) noexcept {
+	using namespace std::string_view_literals;
+	if(src >= interconnect.size())
+		return  std::unexpected("Requested object is out of bounds"sv); // TODO Throw here
+}
+
+// TODO: Rule of 5 for the Board class

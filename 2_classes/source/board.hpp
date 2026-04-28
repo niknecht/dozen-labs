@@ -31,7 +31,7 @@ public:
 
 	std::expected<void, std::string_view> remove(const size_t) noexcept;
 
-	std::expected<void, std::string_view> sort();
+	void sort(); // Make this conditional noexcept based on when std::sort throws according to cppref pages in lms.dozen
 
 	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>) noexcept;
 
