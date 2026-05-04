@@ -3,6 +3,8 @@
 #include <string_view>
 #include <expected>
 
+#pragma once
+
 class Basic_Wire;
 class InWire;
 class OutWire;

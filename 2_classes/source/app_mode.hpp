@@ -1,11 +1,14 @@
 #include "../lib/board.hpp"
+#include "command.hpp"
 
 #pragma once
 
 #include <string_view>
 #include <string>
 #include <iostream>
-
+namespace app {
+	class app_t;
+}
 namespace cli {
 	class cli_mode;
 
@@ -18,19 +21,23 @@ enum class op_t {
 	
 };
 
-class app {
+// This class implements command design pattern
+class app::app_t {
 private:
 	circuit::Board device;
+	std::vector<command::cmd_t> req;
 public:
+	// High-level methods
 	constexpr inline static std::string_view help();
 	virtual bool refresh_and_wait() = 0;
 	virtual void diagramo() const = 0;
-	virtual std::expected<op_t, std::string_view> accepti() const = 0;
-	virtual std::expected<void, std::string_view> act(op_t op) const = 0;
+	virtual std::expected<void, std::string_view> accepti() const = 0; // Assigns Command_t in vec TODO If invalid input (unexpected), accept again
+	virtual std::expected<void, std::string_view> act() const = 0;
 	virtual void erro(std::string_view) = 0;
+
 };
 
-class cli::cli_mode : public app {
+class cli::cli_mode : public app::app_t {
 private:
 	std::string buf;
 public:
@@ -38,8 +45,8 @@ public:
 
 	bool refresh_and_wait() override;
 	void diagramo() const override;
-	std::expected<op_t, std::string_view> accepti() const override;
-	std::expected<void, std::string_view> act(op_t op) const override;
+	std::expected<void, std::string_view> accepti() const override;
+	//std::expected<void, std::string_view> act(op_t op) const override;
 	void erro(std::string_view) override;
 
 	~cli_mode() = default;
