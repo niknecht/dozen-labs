@@ -73,10 +73,16 @@ void Board::sort() {
 
 std::expected<void, std::string_view> Board::moveuv(const size_t src, const std::pair<float, float> newuv) {
 	using namespace std::string_view_literals;
-	if(src < interconnect.size())
-		return std::visit(overloads{[newuv](auto& wire) {return wire.moveuv(newuv);}}, interconnect[src]);
+	if(src < interconnect.size()){
+		std::visit(overloads{[newuv](auto& wire) {return wire.moveuv(newuv);}}, interconnect[src]);
+		return {};
+	}
 	else {
-		throw std::out_of_range("Out-of-bounds inteerconnect look-up");
+		throw std::out_of_range("Out-of-bounds interconnect look-up");
 		return  std::unexpected("Requested object is out of bounds"sv);
 	}
+}
+
+const auto& Board::data() const noexcept{
+	return interconnect;
 }

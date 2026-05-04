@@ -1,5 +1,7 @@
 #include "wire.hpp"
 
+#pragma once
+
 #include <variant>
 #include <vector>
 #include <expected>
@@ -40,6 +42,8 @@ public:
 	void sort(); // Make this conditional noexcept based on when std::sort throws according to cppref pages in lms.dozen
 
 	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>);
+
+	const decltype(interconnect)& data() const noexcept;
 
 	template <class ...Ts>
 	struct overloads : Ts... {using Ts::operator()...;}; // See std::variant<...Type>::visit example on cppreference.com

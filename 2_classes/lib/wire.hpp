@@ -22,11 +22,13 @@ public:
 	Basic_Wire& operator=(const Basic_Wire&) = default;
 	Basic_Wire& operator= (Basic_Wire&&) = default;
 
-	bool operator<(const Basic_Wire&) const;
-	bool operator==(const Basic_Wire&) const;
-	bool operator<=>(const Basic_Wire&) const = default;
+	constexpr bool operator<(const Basic_Wire&) const;
+	constexpr bool operator==(const Basic_Wire&) const;
+	constexpr bool operator<=>(const Basic_Wire&) const = default;
 
-	std::expected<void, std::string_view> moveuv(std::pair<float, float> newuv);
+	void moveuv(std::pair<float, float> newuv); // Checking the coordinate validity is responsibility of the user class. 
+						    // Basic_Wire class guarantees that uv is {[0.f;1.f], [-1.f, 0.f]} at all times
+	std::pair<float, float> getuv() const noexcept;
 };
 
 
@@ -37,7 +39,7 @@ class InWire : public Basic_Wire {
 private:
 	std::optional<std::reference_wrapper<OutWire>> tethered;
 	
-	InWire& connect(OutWire&) noexcept; // Agh, shoulda called it intgrate
+	InWire& connect(OutWire&) noexcept; // Agh, shoulda called it integrate
 public:
 	InWire(auto&&... args) noexcept
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
@@ -47,8 +49,8 @@ public:
 	InWire& operator=(const InWire&) = default;
 	InWire& operator=(InWire&&) = default;
 
-	AXIPacket make_tethered(auto&&... args) noexcept
-	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
+	AXIPacket make_tethered(auto&&... args) noexcept		// Wire classes guarentee that there is only 1 copy of AXIPacket
+	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); // Made per make_tethered
 
 	bool is_tethered() const noexcept;
 	std::expected<void, std::string_view> operator>> (OutWire& other) noexcept; // TODO Add C++23 conditional noexcept here and everywhere else
@@ -96,7 +98,7 @@ private:
 	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	auto get_slub(this auto&& self) noexcept -> const decltype(slub)&;  // Use expected for incorrect ABI usage, TODO use explcit self parameter and deducing this
+	auto get_slub(this auto&& self) noexcept -> decltype(auto);  // Use expected for incorrect ABI usage, TODO use explcit self parameter and deducing this
 	void set_transmitter(const decltype(master)) noexcept;   // Use exceptions for design errors within the Wire classes
 								// Specifically here, there's nothing to go wrong
 	AXIPacket(Base&, auto&&... args)

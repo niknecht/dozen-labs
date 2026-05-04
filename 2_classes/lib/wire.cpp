@@ -1,16 +1,18 @@
 #include "wire.hpp"
 #include <cmath>
 
-Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv(arg)
+static constexpr const auto g_mod = [](const float x)constexpr noexcept{ auto y = x>0.f ? x : -x; return y;};
+
+Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv{g_mod(arg.first), -g_mod(arg.second)}
 {}
 
-bool Basic_Wire::operator<(const Basic_Wire& other) const {
+constexpr bool Basic_Wire::operator<(const Basic_Wire& other) const {
 	const auto& [x,y] = uv;
 	const auto& [x1, y1] = other.uv;
-	constexpr auto mod = [](const decltype(uv.first)& x, const decltype(uv.second)& y){ return x*x + y*y;};
+	constexpr auto mod = [](const decltype(uv.first)& x, const decltype(uv.second)& y)constexpr noexcept{ auto z = x*x + y*y; return z;};
 	return mod(x, y) < mod(x1, y1);
 }
-bool Basic_Wire::operator==(const Basic_Wire& other) const {
+constexpr bool Basic_Wire::operator==(const Basic_Wire& other) const {
 	return uv == other.uv;
 }
 
@@ -44,12 +46,16 @@ template<class Base, class Product>
 AXIPacket<Base, Product>::AXIPacket(AXIPacket&& other) : slave(other.slave), master(other.master), slub(std::move(other.slub))
 {}
 
+template<class Base, class Product>
+auto AXIPacket<Base, Product>::get_slub(this auto&&  self) noexcept-> decltype(auto) { //noexcept
+	return std::forward<std::remove_reference_t<decltype(self)>>(self).slub;
+}
 
-InWire::InWire(::AXIPacket<OutWire, InWire>&& pkt) : InWire(std::move(pkt.get_slub()))
+InWire::InWire(::AXIPacket<OutWire, InWire>&& pkt) : InWire(pkt.get_slub())
 {
 	pkt.set_transmitter(*this);
 }
-OutWire::OutWire(::AXIPacket<InWire, OutWire>&& pkt) : OutWire(std::move(pkt.get_slub()))
+OutWire::OutWire(::AXIPacket<InWire, OutWire>&& pkt) : OutWire(pkt.get_slub())
 {
 	pkt.set_transmitter(*this); // Handshake!!
 }
@@ -65,10 +71,6 @@ AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
 // move the axi_packet into newwire ctor arg from the appropriate/applicable axi_packet
 // and you're done
 
-template<class Base, class Product>
-auto AXIPacket<Base, Product>::get_slub(this auto&&  self) noexcept-> const decltype(slub)& { //noexcept
-	return std::forward<std::remove_reference_t<decltype(self)>>(self).slub;
-}
 
 template<class Base, class Product>
 void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster) noexcept {
@@ -130,4 +132,13 @@ std::expected<void, std::string_view> InWire::disconnect(){
 		else throw "\nCritical Design Error: Assimetrical connection\n"sv;
 	
 	return {};
+}
+
+void Basic_Wire::moveuv(std::pair<float, float> newuv){
+	constexpr const auto mod = [](const float x)constexpr noexcept{ auto y = x>0.f ? x : -x; return y;};
+	uv = {mod(newuv.first), -mod(newuv.second)}; // (i) constexpr everything, (ii) blame Sam Hyde
+}
+
+std::pair<float, float> Basic_Wire::getuv() const noexcept {
+	return uv;
 }
