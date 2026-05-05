@@ -86,3 +86,11 @@ std::expected<void, std::string_view> Board::moveuv(const size_t src, const std:
 const auto& Board::data() const noexcept{
 	return interconnect;
 }
+
+const decltype(std::declval<const decltype(Board::interconnect)>().begin()) Board::begin() const noexcept {
+	return data().begin();
+}
+
+const decltype(std::declval<const decltype(Board::interconnect)>().end()) Board::end() const noexcept {
+	return data().end();
+}

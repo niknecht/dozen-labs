@@ -55,6 +55,8 @@ public:
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); // Made per make_tethered
 
 	bool is_tethered() const noexcept;
+	std::optional<std::reference_wrapper<const OutWire>> tethered_view() const noexcept;
+
 	std::expected<void, std::string_view> operator>> (OutWire& other) noexcept; // TODO Add C++23 conditional noexcept here and everywhere else
 	std::expected<void, std::string_view> disconnect();
 
@@ -82,6 +84,8 @@ public:
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
 
 	bool is_tethered() const noexcept;
+	std::optional<std::reference_wrapper<const InWire>> tethered_view() const noexcept;
+
 	std::expected<void, std::string_view> operator>> (InWire& other) noexcept;
 	std::expected<void, std::string_view> disconnect();
 
@@ -100,7 +104,7 @@ private:
 	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	auto get_slub(this auto&& self) noexcept -> decltype(auto);  // Use expected for incorrect ABI usage, TODO use explcit self parameter and deducing this
+	auto get_slub(this auto&& self) noexcept -> decltype(auto);  // Use expected for incorrect ABI usage
 	void set_transmitter(const decltype(master)) noexcept;   // Use exceptions for design errors within the Wire classes
 								// Specifically here, there's nothing to go wrong
 	AXIPacket(Base&, auto&&... args)

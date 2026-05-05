@@ -6,6 +6,8 @@
 #include <string_view>
 #include <string>
 #include <iostream>
+#include <memory>
+
 namespace app {
 	class app_t;
 }
@@ -13,7 +15,6 @@ namespace cli {
 	class cli_mode;
 
 	std::ostream& operator<<(std::ostream& cout, const std::variant<InWire, OutWire>& w);
-
 	std::ostream& operator<<(std::ostream& cout, const circuit::Board& b);
 }
 
@@ -23,15 +24,15 @@ enum class op_t {
 
 // This class implements command design pattern
 class app::app_t {
-private:
+protected:
 	circuit::Board device;
-	std::vector<command::cmd_t> req;
+	std::vector<std::shared_ptr<command::cmd_t>> req;
 public:
 	// High-level methods
 	constexpr inline static std::string_view help();
-	virtual bool refresh_and_wait() = 0;
+	virtual bool refresh_and_wait() = 0; // All errors are handled at this level
 	virtual void diagramo() const = 0;
-	virtual std::expected<void, std::string_view> accepti() const = 0; // Assigns Command_t in vec TODO If invalid input (unexpected), accept again
+	virtual std::expected<void, std::string_view> accepti() = 0; // Assigns Command_t in vec TODO If invalid input (unexpected), accept again
 	virtual std::expected<void, std::string_view> act() const = 0;
 	virtual void erro(std::string_view) = 0;
 
@@ -45,10 +46,9 @@ public:
 
 	bool refresh_and_wait() override;
 	void diagramo() const override;
-	std::expected<void, std::string_view> accepti() const override;
+	std::expected<void, std::string_view> accepti() override;
 	//std::expected<void, std::string_view> act(op_t op) const override;
 	void erro(std::string_view) override;
 
 	~cli_mode() = default;
-	
 };

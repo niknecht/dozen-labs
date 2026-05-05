@@ -142,3 +142,10 @@ void Basic_Wire::moveuv(std::pair<float, float> newuv){
 std::pair<float, float> Basic_Wire::getuv() const noexcept {
 	return uv;
 }
+
+std::optional<std::reference_wrapper<const OutWire>> InWire::tethered_view() const noexcept {
+	return this->tethered;
+}
+std::optional<std::reference_wrapper<const InWire>> OutWire::tethered_view() const noexcept {
+	return this->tethered;
+}

@@ -33,7 +33,7 @@ class command::etch : public command::cmd_t {
 private:
 	std::variant<InWire, OutWire> w;
 public:
-	etch(circuit::Board&, std::variant<InWire, OutWire>); // Copy ellision on pass
+	explicit etch(circuit::Board&, std::variant<InWire, OutWire>); // Copy ellision on pass
 
 	etch& operator=(const etch&) = default;
 	etch& operator=(etch&&) = default;
@@ -49,7 +49,7 @@ class command::integrate : public command::cmd_t {
 private:
 	std::size_t pos1, pos2;
 public:
-	integrate(circuit::Board&, std::size_t, std::size_t);
+	explicit integrate(circuit::Board&, std::size_t, std::size_t);
 
 	integrate& operator=(const integrate&) = default;
 	integrate& operator=(integrate&&) = default;
@@ -65,7 +65,7 @@ class command::dntegrate : public command::cmd_t {
 private:
 	std::size_t pos;
 public:
-	dntegrate(circuit::Board&, std::size_t);
+	explicit dntegrate(circuit::Board&, std::size_t);
 
 	dntegrate& operator=(const dntegrate&) = default;
 	dntegrate& operator=(dntegrate&&) = default;
@@ -82,7 +82,7 @@ private:
 	std::pair<float, float> uv;
 	std::size_t coord;
 public:
-	move(circuit::Board&, std::size_t, std::pair<float, float>);
+	explicit move(circuit::Board&, std::size_t, std::pair<float, float>);
 
 	move& operator=(const move&) = default;
 	move& operator=(move&&) = default;
@@ -98,7 +98,7 @@ class command::remove : public command::cmd_t {
 private:
 	std::size_t pos;
 public:
-	remove(circuit::Board&, std::size_t);
+	explicit remove(circuit::Board&, std::size_t);
 
 	remove& operator=(const remove&) = default;
 	remove& operator=(remove&&) = default;

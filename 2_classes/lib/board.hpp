@@ -43,7 +43,9 @@ public:
 
 	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>);
 
-	const decltype(interconnect)& data() const noexcept;
+	decltype(std::declval<const decltype(Board::interconnect)>())& vec() const noexcept;
+	const decltype(std::declval<const decltype(Board::interconnect)>().begin()) begin() const noexcept;
+	const decltype(std::declval<const decltype(Board::interconnect)>().end()) end() const noexcept;
 
 	template <class ...Ts>
 	struct overloads : Ts... {using Ts::operator()...;}; // See std::variant<...Type>::visit example on cppreference.com
