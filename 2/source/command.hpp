@@ -22,6 +22,7 @@ namespace command {
 }
 
 class command::cmd_t {
+protected:
 	std::reference_wrapper<circuit::Board> board; // Use Board interfaces to acces interconnect through the API
 public:
 	cmd_t(circuit::Board&); // TODO just set board here

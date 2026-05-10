@@ -14,19 +14,24 @@ Board::Board(t_R&& r) :interconnect {(std::forward<t_R>(r) | std::ranges::move) 
 } // I love ranges
   // So, this actually also makes construction of Board from an individual wire possible (required in the assignment)
 
-auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(auto){
+/*auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference<decltype(self)>>(self)){
 	std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.push_back(std::forward<decltype(el)>(el));
 	return std::forward<std::remove_reference_t<decltype(self)>>(self);
+}*/
+
+auto Board::operator+=(std::variant<InWire, OutWire>&& el) & -> Board&{
+	(*this).interconnect.push_back(std::forward<decltype(el)>(el));
+	return *this;
 }
 
 auto Board::operator[](this auto&& self, const size_t i)
--> decltype(auto)
+-> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(std::declval<decltype(0llu)>()))
  {
 	using namespace std::string_view_literals;
 	if (i < self.interconnect.size())
 	    return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i); // Both this and the one below should be correct returns, but this one's shorter
 		//std::forward_like<decltype(self)>(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i])
-	else return std::unexpected("Requested element is out-of-bounds."sv);
+	//else return std::unexpected("Requested element is out-of-bounds."sv);
 }
 
 std::expected <void, std::string_view> Board::add_link(const size_t lhs, const size_t rhs) {
@@ -44,7 +49,7 @@ std::expected <void, std::string_view> Board::add_link(const size_t lhs, const s
 		return std::visit(visitor, f);
 	}
 	else {
-		throw std::out_of_range("Out of bounds on interconnect look-up");
+		//throw std::out_of_range("Out of bounds on interconnect look-up");
 		return std::unexpected("Requested element is out-of-bounds."sv);
 	}
 }
@@ -83,14 +88,15 @@ std::expected<void, std::string_view> Board::moveuv(const size_t src, const std:
 	}
 }
 
-const auto& Board::data() const noexcept{
+decltype(std::declval<const decltype(Board::interconnect)>())& Board::vec() const noexcept {
+//const auto& Board::data() const noexcept{
 	return interconnect;
 }
 
 const decltype(std::declval<const decltype(Board::interconnect)>().begin()) Board::begin() const noexcept {
-	return data().begin();
+	return vec().begin();
 }
 
 const decltype(std::declval<const decltype(Board::interconnect)>().end()) Board::end() const noexcept {
-	return data().end();
+	return vec().end();
 }
