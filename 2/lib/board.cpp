@@ -67,7 +67,7 @@ std::expected<void, std::string_view> Board::remove(const size_t it) {
 				return {};
 			});
 	else {
-		throw std::out_of_range("Out of bounds interconnect look-up");
+		//throw std::out_of_range("Out of bounds interconnect look-up");
 		return std::unexpected("Requested element is out-of-bounds"sv);
 	}
 }

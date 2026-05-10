@@ -81,7 +81,7 @@ public:
 class command::move : public command::cmd_t {
 private:
 	std::pair<float, float> uv;
-	std::size_t coord;
+	std::size_t pos;
 public:
 	explicit move(circuit::Board&, std::size_t, std::pair<float, float>);
 

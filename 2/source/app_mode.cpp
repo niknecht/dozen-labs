@@ -178,6 +178,18 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		req.push_back(std::make_shared<command::move>(device, pos, std::pair{x, y}));
 		return {};
 	}
+	else if(request_tokens[0llu] == "remove"sv) {
+		char* stoull_success {};
+
+		auto pos {~0x0llu};
+		pos = std::strtoll(request_tokens[1llu].data(), &stoull_success, 10);
+		if(!stoull_success || !*stoull_success || pos == ~0x0llu)
+			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to remove. Only positive ASCII numbers are allowed."sv);
+	
+		req.push_back(std::make_shared<command::remove>(device, pos));
+		return {};
+	}
+
 	return std::unexpected("No ctrl paths satisfied the expression.");
 }
 
