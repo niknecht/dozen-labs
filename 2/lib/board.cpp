@@ -4,6 +4,13 @@
 #include <utility>
 #include <algorithm>
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
+
 using namespace circuit;
 
 //Board::Board(Board&& other) noexcept : interconnect{std::forward<Board>(other).interconnect}

@@ -1,6 +1,13 @@
 #include "wire.hpp"
 #include <cmath>
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
+
 static constexpr const auto g_mod = [](const float x)constexpr noexcept{ auto y = x>0.f ? x : -x; return y;};
 
 Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv{g_mod(arg.first), -g_mod(arg.second)}

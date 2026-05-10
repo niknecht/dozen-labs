@@ -7,6 +7,14 @@
 #include <string>
 #include <string_view>
 #include <ranges>
+#include <print>
+
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
 
 std::ostream& cli::operator<< (std::ostream& cout, const std::variant<InWire, OutWire>& v) {
 	const auto uniformCoordinates = std::visit(circuit::Board::overloads([](const auto& w)constexpr noexcept{auto y = w.getuv(); return y;}), v);
@@ -199,9 +207,16 @@ std::expected<void, std::string_view> cli::cli_mode::act() {
 	return temp;
 }
 
+std::expected<void, std::string_view> cli::cli_mode::erro(std::string_view msg) {
+	std::print("{}\n", msg);
+	return std::unexpected(msg); // Propagate this so that we know the inital call failed
+}
+
 bool cli::cli_mode::refresh_and_wait() {
-	accepti().or_else([](std::string_view s)->std::expected<void, std::string_view>{return {};});
-	act();
+	while(!accepti().or_else(this->erro))
+		;
+	if(!act().or_else(this->erro))
+		;
 	diagramo();
 
 	return true;

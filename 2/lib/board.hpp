@@ -7,10 +7,28 @@
 #include <expected>
 #include <string_view>
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0: 2026
+ * */
+
 namespace circuit{
 	class Board;
 }
 
+/*!
+ *
+ * This is an owning vector wrapper for the vector of variants of InWire, OutWire speicialization. The expectation is that
+ * errors are handled locally, at the point where they are critical, except for when passing arguments to a constructor, in
+ * that case all values are expected to be valid and sane. It should be expected that NO error checking or sanity checks are
+ * performed by constructors.
+ *
+ * Classes InWire, and OutWire are not polimorphic to most methods of Board. Implementing InWire and OutWire in a polymorphic way
+ * is non-trivial due to different return types of 'tethered''s getters and types of the 'tethered' members. This observation 
+ * dictates the use of visit pattern together with a vector of variants, making the architecture simpler, though, making some 
+ * functions harder to read to a reader who is not used to such pattern.*/
 class circuit::Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
@@ -24,8 +42,9 @@ public:
 
 	~Board() = default;
 
+	// @param viable_range 
 	template <std::ranges::viewable_range  t_R>
-	Board(t_R&& r);
+	Board(t_R&& r); // Reference collapsing
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	
@@ -48,6 +67,7 @@ public:
 	const decltype(std::declval<const decltype(Board::interconnect)>().begin()) begin() const noexcept;
 	const decltype(std::declval<const decltype(Board::interconnect)>().end()) end() const noexcept;
 
+	// @see See std::variant<...Type>::visit example on cppreference.com
 	template <class ...Ts>
 	struct overloads : Ts... {using Ts::operator()...;}; // See std::variant<...Type>::visit example on cppreference.com
 };

@@ -5,6 +5,13 @@
 
 #pragma once
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
+
 class Basic_Wire;
 class InWire;
 class OutWire;
@@ -51,13 +58,16 @@ public:
 	InWire& operator=(const InWire&) = default;
 	InWire& operator=(InWire&&) = default;
 
-	AXIPacket make_tethered(auto&&... args) noexcept		// Wire classes guarentee that there is only 1 copy of AXIPacket
-	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); // Made per make_tethered
+	AXIPacket make_tethered(auto&&... args) noexcept //!< @example InWire a{0.5f, -0.8f}; OutWire b = a.make_tethered(0.2f, -4.5f);
+	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from
+	@return Returns a stub of the wire of the opposite direction, which then can be  used to construct the wire itself.
+	Newly created wire is created to the wire it was created for, and the wire it was created for is also connected to the new wire by the end of the call.
+	It is guaranteed that there's only 1 copy of AXIPacket created.*/
 
 	bool is_tethered() const noexcept;
 	std::optional<std::reference_wrapper<const OutWire>> tethered_view() const noexcept;
 
-	std::expected<void, std::string_view> operator>> (OutWire& other) noexcept; // TODO Add C++23 conditional noexcept here and everywhere else
+	std::expected<void, std::string_view> operator>> (OutWire& other) noexcept;
 	std::expected<void, std::string_view> disconnect();
 
 	InWire(::AXIPacket<OutWire, InWire>&&);
@@ -80,8 +90,11 @@ public:
 	OutWire& operator=(const OutWire&) = default;
 	OutWire& operator=(OutWire&&) = default;
 
-	AXIPacket make_tethered(auto&&... args) noexcept
-	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
+	AXIPacket make_tethered(auto&&... args) noexcept //!< @example OutWire a{0.5f, -0.8f}; InWire b = a.make_tethered(0.2f, -4.5f);
+	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from
+	@return Returns a stub of the wire of the opposite direction, which then can be  used to construct the wire itself.
+	Newly created wire is created to the wire it was created for, and the wire it was created for is also connected to the new wire by the end of the call.
+	It is guaranteed that there's only 1 copy of AXIPacket created.*/
 
 	bool is_tethered() const noexcept;
 	std::optional<std::reference_wrapper<const InWire>> tethered_view() const noexcept;
@@ -92,10 +105,7 @@ public:
 	OutWire(::AXIPacket<InWire, OutWire>&&);
 };
 
-// Make In/OutWire constructible from whareve BasicWire is constructible from
 
-// This is also class agnostic, so you can create whaterever new wires, by just passing either std::any to Product
-// TODO Implement whatever I just wrote above with std::visit prolly
 template <class Base, class Product> // <slave, master>
 class AXIPacket { // AXI-S protocol Valcum tu FPGA
 private:

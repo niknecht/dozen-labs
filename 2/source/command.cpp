@@ -4,6 +4,13 @@
 #include <string_view>
 #include <expected>
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
+
 command::cmd_t::cmd_t(circuit::Board& device) : board{device} {}
 
 command::etch::etch(circuit::Board& device, std::variant<InWire, OutWire> wire) : cmd_t{device}, w{wire} {

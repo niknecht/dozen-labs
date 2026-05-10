@@ -6,6 +6,13 @@
 
 #pragma once
 
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
+
 #include "../lib/wire.hpp"
 #include "../lib/board.hpp"
 

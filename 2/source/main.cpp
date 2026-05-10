@@ -2,9 +2,15 @@
 
 #include <vector>
 #include <cstring>
-#include <print>
 #include <string_view>
 #include <optional>
+
+/*!
+ * @file
+ * @authors Nikira Vitkovskiy
+ * @copyright (c) 2026 Nikita Vitkovkiy
+ * @license CC0-1.0
+ */
 
 // -cli for cli mode
 int main(int argv, char** argc) {
