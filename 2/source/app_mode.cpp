@@ -68,11 +68,11 @@ void cli::cli_mode::diagramo() const {
 					, *it));
 
 	for(const auto& it : in)
-		if(it)
+		if(it.has_value())
 			std::cout << '@' << it.value().first << it.value().second.get() << " -> " << it.value().second.get().tethered_view().value().get() << '\n';
 
 	for(const auto& it : in)
-		if(it)
+		if(it.has_value())
 			std::cout << "        " << it.value().second.get() << '@' << it.value().first << '\n';
 }
 
@@ -213,9 +213,9 @@ std::expected<void, std::string_view> cli::cli_mode::erro(std::string_view msg) 
 }
 
 bool cli::cli_mode::refresh_and_wait() {
-	while(!accepti().or_else(this->erro))
+	while(accepti().or_else(this->erro))
 		;
-	if(!act().or_else(this->erro))
+	if(act().or_else(this->erro))
 		;
 	diagramo();
 
