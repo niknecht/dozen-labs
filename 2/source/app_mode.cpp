@@ -68,10 +68,15 @@ void cli::cli_mode::diagramo() const {
 					, *it));
 
 	for(const auto& it : in)
-		if(it.has_value())
-			std::cout << '@' << it.value().first << it.value().second.get() << " -> " << it.value().second.get().tethered_view().value().get() << '\n';
+		if(it.has_value()) {
+			std::cout << '@' << it.value().first << it.value().second.get() << " -> ";
+			if(it.value().second.get().tethered_view().has_value())
+				std::cout << it.value().second.get().tethered_view().value().get() << '\n';
+			else 
+				std::cout << "      \n";
+		}
 
-	for(const auto& it : in)
+	for(const auto& it : outNotConnected)
 		if(it.has_value())
 			std::cout << "        " << it.value().second.get() << '@' << it.value().first << '\n';
 }
@@ -142,7 +147,7 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		
 		pos2 = std::strtoull(request_tokens[2llu].data(), &stoull_success, 10);
 		if(!stoull_success || !*stoull_success || pos2 == ~0x0llu)
-			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to integrate. Only positive ASCII numbers are allowed."sv);
+			return std::unexpected("Syntax error: Invalid unsigned format in the second argument to integrate. Only positive ASCII numbers are allowed."sv);
 		// Checking if pos is a valid index in device is the callable's resposibility
 
 		if(pos1 == pos2)
@@ -214,10 +219,8 @@ std::expected<void, std::string_view> cli::cli_mode::erro(std::string_view msg) 
 
 bool cli::cli_mode::refresh_and_wait() {
 	while(accepti().or_else(this->erro))
-		;
-	if(act().or_else(this->erro))
-		;
-	diagramo();
+		if(act().or_else(this->erro))
+			diagramo();
 
 	return true;
 }
