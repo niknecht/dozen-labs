@@ -48,10 +48,17 @@ public:
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	
-	auto operator+=(std::variant<InWire, OutWire>&&) & -> Board&; // intent to return ref to this, category should be preserved
-	//auto operator+=(this auto&& self, std::variant<InWire, OutWire>&&) -> decltype(std::forward<std::remove_reference<decltype(self)>>(self)); // intent to return ref to this, category should be preserved
-
-	auto operator[](this auto&& self, const size_t) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(std::declval<decltype(0llu)>())) ; // accesing temporary's member should enable move
+	//auto operator+=(std::variant<InWire, OutWire>&&) & -> Board&; // intent to return ref to this, category should be preserved
+	auto operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self)) // intent to return ref to this, category should be preserved
+	{
+		std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.push_back(std::forward<decltype(el)>(el));
+		return std::forward<std::remove_reference_t<decltype(self)>>(self);
+	}
+	//auto operator[](const size_t i) & -> std::variant<InWire, OutWire>&;
+	auto operator[](this auto&& self, size_t i) -> decltype(std::forward<Board>(self).interconnect.at(i)) // accesing temporary's member should enable move
+	{
+		return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i);
+	}
 
 	std::expected<void, std::string_view> add_link(const size_t , const size_t); // ^ Reference collapsing +
 

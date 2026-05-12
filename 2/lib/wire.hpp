@@ -7,7 +7,7 @@
 
 /*!
  * @file
- * @authors Nikira Vitkovskiy
+ * @authors Nikita Vitkovskiy
  * @copyright (c) 2026 Nikita Vitkovkiy
  * @license CC0-1.0
  */
@@ -31,9 +31,9 @@ public:
 	Basic_Wire& operator=(const Basic_Wire&) = default;
 	Basic_Wire& operator= (Basic_Wire&&) = default;
 
-	constexpr bool operator<(const Basic_Wire&) const;
-	constexpr bool operator==(const Basic_Wire&) const;
-	constexpr bool operator<=>(const Basic_Wire&) const = default;
+	bool operator<(const Basic_Wire&) const;
+	bool operator==(const Basic_Wire&) const;
+	bool operator<=>(const Basic_Wire&) const = default;
 
 	void moveuv(std::pair<float, float> newuv); // Checking the coordinate validity is responsibility of the user class. 
 						    // Basic_Wire class guarantees that uv is {[0.f;1.f], [-1.f, 0.f]} at all times
@@ -51,7 +51,9 @@ private:
 	InWire& connect(OutWire&) noexcept; // Agh, shoulda called it integrate
 public:
 	InWire(auto&&... args) noexcept
-	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
+	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
+	{
+	}
 
 	InWire(InWire&&) = default;
 	InWire(const InWire&) = default;
@@ -83,7 +85,8 @@ private:
 	OutWire& connect(InWire&) noexcept;
 public:
 	OutWire(auto&&... args) noexcept
-	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>);
+	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
+	{}
 
 	OutWire(OutWire&&) = default;
 	OutWire(const OutWire&) = default;

@@ -6,7 +6,7 @@
 
 /*!
  * @file
- * @authors Nikira Vitkovskiy
+ * @authors Nikita Vitkovskiy
  * @copyright (c) 2026 Nikita Vitkovkiy
  * @license CC0-1.0
  */
@@ -21,25 +21,24 @@ Board::Board(t_R&& r) :interconnect {(std::forward<t_R>(r) | std::ranges::move) 
 } // I love ranges
   // So, this actually also makes construction of Board from an individual wire possible (required in the assignment)
 
-/*auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference<decltype(self)>>(self)){
+/*auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self)){
 	std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.push_back(std::forward<decltype(el)>(el));
 	return std::forward<std::remove_reference_t<decltype(self)>>(self);
 }*/
 
-auto Board::operator+=(std::variant<InWire, OutWire>&& el) & -> Board&{
+/*auto Board::operator+=(std::variant<InWire, OutWire>&& el) & -> Board&{
 	(*this).interconnect.push_back(std::forward<decltype(el)>(el));
 	return *this;
-}
+}*/
 
-auto Board::operator[](this auto&& self, const size_t i)
--> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(std::declval<decltype(0llu)>()))
+/*template <typename Self>
+auto Board::operator[](this Self&& self, size_t i)
+-> decltype(std::forward<Board>(self).interconnect.at(i))
  {
-	using namespace std::string_view_literals;
-	if (i < self.interconnect.size())
-	    return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i); // Both this and the one below should be correct returns, but this one's shorter
+	return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i); // Both this and the one below should be correct returns, but this one's shorter
 		//std::forward_like<decltype(self)>(std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect[i])
 	//else return std::unexpected("Requested element is out-of-bounds."sv);
-}
+}*/
 
 std::expected <void, std::string_view> Board::add_link(const size_t lhs, const size_t rhs) {
 	using namespace std::string_view_literals;

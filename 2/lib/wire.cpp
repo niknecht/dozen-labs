@@ -3,7 +3,7 @@
 
 /*!
  * @file
- * @authors Nikira Vitkovskiy
+ * @authors Nikita Vitkovskiy
  * @copyright (c) 2026 Nikita Vitkovkiy
  * @license CC0-1.0
  */
@@ -13,24 +13,24 @@ static constexpr const auto g_mod = [](const float x)constexpr noexcept{ auto y 
 Basic_Wire::Basic_Wire(std::pair<float, float>arg) noexcept :uv{g_mod(arg.first), -g_mod(arg.second)}
 {}
 
-constexpr bool Basic_Wire::operator<(const Basic_Wire& other) const {
+bool Basic_Wire::operator<(const Basic_Wire& other) const {
 	const auto& [x,y] = uv;
 	const auto& [x1, y1] = other.uv;
 	constexpr auto mod = [](const decltype(uv.first)& x, const decltype(uv.second)& y)constexpr noexcept{ auto z = x*x + y*y; return z;};
 	return mod(x, y) < mod(x1, y1);
 }
-constexpr bool Basic_Wire::operator==(const Basic_Wire& other) const {
+bool Basic_Wire::operator==(const Basic_Wire& other) const {
 	return uv == other.uv;
 }
 
-InWire::InWire(auto&&... args) noexcept
+/*InWire::InWire(auto&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 {
 }
 
 OutWire::OutWire(auto&&... args) noexcept // Standard forwarding constructor (idk, blame chatgpt)
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
-{}
+{}*/
 
 AXIPacket<InWire, OutWire> InWire::make_tethered(auto&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>)

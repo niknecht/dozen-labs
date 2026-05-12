@@ -8,7 +8,7 @@
 
 /*!
  * @file
- * @authors Nikira Vitkovskiy
+ * @authors Nikita Vitkovskiy
  * @copyright (c) 2026 Nikita Vitkovkiy
  * @license CC0-1.0
  */
