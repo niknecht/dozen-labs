@@ -104,23 +104,23 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 	}
 
 	using namespace std::string_view_literals;
-	if(request_tokens[0llu] == "etch"sv){
+	if(request_tokens[0uz] == "etch"sv){
 		using namespace std::string_view_literals;
 
 		char* strtof_success {};
 
-		const auto x_token = request_tokens[1llu];
+		const auto x_token = request_tokens[1uz];
 		float x = std::strtof(x_token.data(), &strtof_success);
 		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the first argument to etch. Only ASCII numbers and the dot are allowed."sv);
 		else if(x < 0.f) return std::unexpected("Error: Invalid first argument to the etch expression. X coordinate must be not negative."sv);
 
-		const auto y_token = request_tokens[2llu];
+		const auto y_token = request_tokens[2uz];
 
 		float y = std::strtof(y_token.data(), &strtof_success);
 		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the second argument to etch. Only ASCII numbers and the dot are allowed."sv);
 		else if(y > 0.f) return std::unexpected("Error: Invalid second argument to the etch expression. Y coordinate must be not positive."sv);
 	
-		auto type_token = request_tokens[3llu];
+		auto type_token = request_tokens[3uz];
 		char type;
 		if(type_token=="i"sv)
 			type = 'i';
@@ -136,17 +136,17 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		req.push_back(std::make_shared<command::etch>(this->device, wire));
 		return {};
 	}
-	else if(request_tokens[0llu] == "integrate"sv){
-		char* stoull_success {};
+	else if(request_tokens[0uz] == "integrate"sv){
+		auto pos1 {~0x0uz}, pos2 {~0x0uz};
 
-		auto pos1 {~0x0llu}, pos2 {~0x0llu};
-		//const auto pos1_token {request_tokens[1llu]}, pos2_token {request_tokens[2llu]};
-		pos1 = std::strtoull(request_tokens[1llu].data(), &stoull_success, 10);
-		if(!stoull_success || !*stoull_success || pos1 == ~0x0llu)
+		const auto pos1_token {request_tokens[1uz]};
+		auto [ptr1, err1] = std::from_chars(pos1_token.data(), pos1_token.data() + pos1_token.size(), pos1);//std::strtoull(request_tokens[1uz].data(), &stoull_success, 10);
+		if(err1 != std::errc{} || ptr1 != pos1_token.data() + pos1_token.size())
 			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to integrate. Only positive ASCII numbers are allowed."sv);
 		
-		pos2 = std::strtoull(request_tokens[2llu].data(), &stoull_success, 10);
-		if(!stoull_success || !*stoull_success || pos2 == ~0x0llu)
+		const auto pos2_token {request_tokens[2uz]};
+		auto [ptr2, err2] = std::from_chars(pos2_token.data(), pos2_token.data() + pos2_token.size(), pos2);//std::strtoull(request_tokens[1uz].data(), &stoull_success, 10);
+		if(err2 != std::errc{} || ptr2 != pos2_token.data() + pos2_token.size())
 			return std::unexpected("Syntax error: Invalid unsigned format in the second argument to integrate. Only positive ASCII numbers are allowed."sv);
 		// Checking if pos is a valid index in device is the callable's resposibility
 
@@ -156,33 +156,31 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		req.push_back(std::make_shared<command::integrate>(device, pos1, pos2));
 		return {};
 	}
-	else if(request_tokens[0llu] == "dntegrate"sv){
-		char* stoull_success {};
-
-		auto pos {~0x0llu};
-		pos = std::strtoll(request_tokens[1llu].data(), &stoull_success, 10);
-		if(!stoull_success || !*stoull_success || pos == ~0x0llu)
+	else if(request_tokens[0uz] == "dntegrate"sv){
+		auto pos {~0x0uz};
+		const auto pos_token {request_tokens[1uz]};
+		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
+		if(err != std::errc{} || ptr != pos_token.data() + pos_token.size())
 			return std::unexpected("Syntax error: Invalid unsigned format in the argument to dntegrate. Only positive ASCII numbers are allowed."sv);
 
 		req.push_back(std::make_shared<command::dntegrate>(device, pos));
 	}
-	else if(request_tokens[0llu] == "move"sv){
-		char* stoull_success {};
-
-		auto pos {~0x0llu};
-		pos = std::strtoll(request_tokens[1llu].data(), &stoull_success, 10);
-		if(!stoull_success || !*stoull_success || pos == ~0x0llu)
-			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to move. Only positive ASCII numbers are allowed."sv);
+	else if(request_tokens[0uz] == "move"sv){
+		auto pos {~0x0uz};
+		const auto pos_token {request_tokens[1uz]};
+		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
+		if(err != std::errc{} || ptr != pos_token.data() + pos_token.size())
+			return std::unexpected("Syntax error: Invalid unsigned format in the argument to dntegrate. Only positive ASCII numbers are allowed."sv);
 
 		char* strtof_success {};
 
-		const auto x_token = request_tokens[1llu];
+		const auto x_token = request_tokens[1uz];
 
 		float x = std::strtof(x_token.data(), &strtof_success);
 		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the second argument to move. Only ASCII numbers and the dot are allowed."sv);
 		else if(x < 0.f) return std::unexpected("Error: Invalid third argument to the etch expression. X coordinate must be not negative."sv);
 
-		const auto y_token = request_tokens[2llu];
+		const auto y_token = request_tokens[2uz];
 
 		float y = std::strtof(y_token.data(), &strtof_success);
 		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the third argument to move. Only ASCII numbers and the dot are allowed."sv);
@@ -191,13 +189,12 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		req.push_back(std::make_shared<command::move>(device, pos, std::pair{x, y}));
 		return {};
 	}
-	else if(request_tokens[0llu] == "remove"sv) {
-		char* stoull_success {};
-
-		auto pos {~0x0llu};
-		pos = std::strtoll(request_tokens[1llu].data(), &stoull_success, 10);
-		if(!stoull_success || !*stoull_success || pos == ~0x0llu)
-			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to remove. Only positive ASCII numbers are allowed."sv);
+	else if(request_tokens[0uz] == "remove"sv) {
+		auto pos {~0x0uz};
+		const auto pos_token {request_tokens[1uz]};
+		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
+		if(err != std::errc{} || ptr != pos_token.data() + pos_token.size())
+			return std::unexpected("Syntax error: Invalid unsigned format in the argument to dntegrate. Only positive ASCII numbers are allowed."sv);
 	
 		req.push_back(std::make_shared<command::remove>(device, pos));
 		return {};
