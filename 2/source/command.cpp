@@ -46,6 +46,8 @@ std::expected<void, std::string_view> command::integrate::operator()() {
 			return board.get().add_link(pos1, pos2);
 	} catch (std::exception& e) {
 		return std::unexpected{std::string_view{e.what()}};
+	} catch (std::string_view e) {
+		return std::unexpected(e);
 	} catch (...) {
 		return std::unexpected("Unknown expeption accured in the integrate command (most likely from Board::operator[]).");
 	}
@@ -56,16 +58,17 @@ command::dntegrate::dntegrate(circuit::Board& device, size_t pos) : cmd_t{device
 
 std::expected<void, std::string_view> command::dntegrate::operator()() {
 	try {
-
 		if (pos + 1 > board.get().vec().size())
 			return std::unexpected("Error: The position requested in dntegrate does not exist.");
-		else if (std::visit(circuit::Board::overloads([](const auto& w){return w.is_tethered();}), board.get().vec()[pos]))
+		else if (!std::visit(circuit::Board::overloads([](const auto& w){return w.is_tethered();}), board.get().vec()[pos]))
 			return std::unexpected("Error: Cannot dntegrate a wire that is not connected!");
 
 		else
 			return board.get().rm_link(pos);
 	} catch (std::exception& e) {
 		return std::unexpected{std::string_view{e.what()}};
+	} catch (std::string_view e) {
+		return std::unexpected(e);
 	} catch (...) {
 		return std::unexpected("Unknown expeption accured in the dntegrate command (most likely from Board::operator[]).");
 	}

@@ -67,18 +67,19 @@ void cli::cli_mode::diagramo() const {
 							})
 					, *it));
 
+	std::cout << "  In                  Out\n";
 	for(const auto& it : in)
 		if(it.has_value()) {
-			std::cout << '@' << it.value().first << it.value().second.get() << " -> ";
+			std::cout << "@ " << it.value().first << " " << it.value().second.get();
 			if(it.value().second.get().tethered_view().has_value())
-				std::cout << it.value().second.get().tethered_view().value().get() << '\n';
+				std::cout  << "  ->  " << it.value().second.get().tethered_view().value().get() << '\n';
 			else 
-				std::cout << "      \n";
+				std::cout << '\n';
 		}
 
 	for(const auto& it : outNotConnected)
 		if(it.has_value())
-			std::cout << "        " << it.value().second.get() << '@' << it.value().first << '\n';
+			std::cout << "                 " << it.value().second.get() << " @ " << it.value().first << '\n';
 }
 
 std::expected<void, std::string_view> cli::cli_mode::accepti() {
@@ -164,6 +165,7 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 			return std::unexpected("Syntax error: Invalid unsigned format in the argument to dntegrate. Only positive ASCII numbers are allowed."sv);
 
 		req.push_back(std::make_shared<command::dntegrate>(device, pos));
+		return {};
 	}
 	else if(request_tokens[0uz] == "move"sv){
 		auto pos {~0x0uz};

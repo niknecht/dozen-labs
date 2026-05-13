@@ -110,20 +110,22 @@ std::expected<void, std::string_view> InWire::operator>> (OutWire& other) noexce
 }
 
 bool InWire::is_tethered() const noexcept {
-	return static_cast<bool>(tethered);
+	return static_cast<bool>(tethered.has_value());
 }
 bool OutWire::is_tethered() const noexcept {
-	return static_cast<bool>(tethered);
+	return static_cast<bool>(tethered.has_value());
 }
 
 std::expected<void, std::string_view> OutWire::disconnect() {
 	using namespace std::literals::string_view_literals;
 
-	if(!tethered) 
+	if(!tethered.has_value()) 
 		return std::unexpected("Attempt to break a non-existent connection."sv);
 	else
-		if(tethered.value().get().is_tethered())
-			return this->tethered.reset(), tethered.value().get().disconnect();
+		if(tethered.value().get().is_tethered()) {
+			this->tethered.value().get().tethered.reset(), tethered.reset();
+			return {};
+		}
 		else throw "\nCritical Design Error: Assimetrical connection\n"sv;
 	
 	return {};
@@ -131,11 +133,13 @@ std::expected<void, std::string_view> OutWire::disconnect() {
 std::expected<void, std::string_view> InWire::disconnect(){
 	using namespace std::literals::string_view_literals;
 
-	if(!tethered) 
+	if(!tethered.has_value()) 
 		return std::unexpected("Attempt to break a non-existent connection."sv);
 	else
-		if(tethered.value().get().is_tethered())
-			return this->tethered.reset(), tethered.value().get().disconnect();
+		if(tethered.value().get().is_tethered()) {
+			this->tethered.value().get().tethered.reset(), tethered.reset();
+			return {};
+		}
 		else throw "\nCritical Design Error: Assimetrical connection\n"sv;
 	
 	return {};
