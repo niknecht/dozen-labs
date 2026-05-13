@@ -32,7 +32,7 @@ std::ostream& cli::operator<< (std::ostream& cout, const circuit::Board& b) {
 	
 }
 
-constexpr inline std::string_view app::app_t::help() {
+constexpr inline std::string_view app::app_t::help() noexcept{
 	return
 		"Synopsis:\n"
 		"classes -M{cli|gui} [-h]\n"
@@ -67,7 +67,7 @@ void cli::cli_mode::diagramo() const {
 							})
 					, *it));
 
-	std::cout << "  In                  Out\n";
+	std::cout << "  In                   Out\n";
 	for(const auto& it : in)
 		if(it.has_value()) {
 			std::cout << "@ " << it.value().first << " " << it.value().second.get();
@@ -112,13 +112,13 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 
 		const auto x_token = request_tokens[1uz];
 		float x = std::strtof(x_token.data(), &strtof_success);
-		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the first argument to etch. Only ASCII numbers and the dot are allowed."sv);
+		if(strtof_success == x_token.data()) return std::unexpected("Syntax error: Invalid float format in the first argument to etch. Only ASCII numbers and the dot are allowed."sv);
 		else if(x < 0.f) return std::unexpected("Error: Invalid first argument to the etch expression. X coordinate must be not negative."sv);
 
 		const auto y_token = request_tokens[2uz];
 
 		float y = std::strtof(y_token.data(), &strtof_success);
-		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the second argument to etch. Only ASCII numbers and the dot are allowed."sv);
+		if(strtof_success==y_token.data()) return std::unexpected("Syntax error: Invalid float format in the second argument to etch. Only ASCII numbers and the dot are allowed."sv);
 		else if(y > 0.f) return std::unexpected("Error: Invalid second argument to the etch expression. Y coordinate must be not positive."sv);
 	
 		auto type_token = request_tokens[3uz];
@@ -172,20 +172,20 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		const auto pos_token {request_tokens[1uz]};
 		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
 		if(err != std::errc{} || ptr != pos_token.data() + pos_token.size())
-			return std::unexpected("Syntax error: Invalid unsigned format in the argument to dntegrate. Only positive ASCII numbers are allowed."sv);
+			return std::unexpected("Syntax error: Invalid unsigned format in the first argument to move. Only positive ASCII numbers are allowed."sv);
 
 		char* strtof_success {};
 
-		const auto x_token = request_tokens[1uz];
+		const auto x_token = request_tokens[2uz];
 
 		float x = std::strtof(x_token.data(), &strtof_success);
-		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the second argument to move. Only ASCII numbers and the dot are allowed."sv);
-		else if(x < 0.f) return std::unexpected("Error: Invalid third argument to the etch expression. X coordinate must be not negative."sv);
+		if(strtof_success==x_token.data()) return std::unexpected("Syntax error: Invalid float format in the second argument to move. Only ASCII numbers and the dot are allowed."sv);
+		else if(x < 0.f) return std::unexpected("Error: Invalid second argument to the move expression. X coordinate must be not negative."sv);
 
-		const auto y_token = request_tokens[2uz];
+		const auto y_token = request_tokens[3uz];
 
 		float y = std::strtof(y_token.data(), &strtof_success);
-		if(!strtof_success || !*strtof_success) return std::unexpected("Syntax error: Invalid float format in the third argument to move. Only ASCII numbers and the dot are allowed."sv);
+		if(strtof_success==y_token.data()) return std::unexpected("Syntax error: Invalid float format in the third argument to move. Only ASCII numbers minus sign and the dot are allowed."sv);
 		else if(y > 0.f) return std::unexpected("Error: Invalid third argument to the move expression. Y coordinate must be not positive."sv);
 		
 		req.push_back(std::make_shared<command::move>(device, pos, std::pair{x, y}));

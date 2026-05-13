@@ -67,11 +67,22 @@ std::expected<void, std::string_view> Board::rm_link(const size_t lhs) {
 std::expected<void, std::string_view> Board::remove(const size_t it) {
 	using namespace std::string_view_literals;
 	if (it < interconnect.size())
-		return this->rm_link(it)
-			.and_then([this]()-> std::expected<void, std::string_view>{
-				interconnect.erase(interconnect.begin() + 5);
-				return {};
-			});
+		try {
+		if(std::visit(overloads([](const auto& w){return w.is_tethered();}), (*this)[it]))
+			return this->rm_link(it)
+				.and_then([this, it]()-> std::expected<void, std::string_view>{
+					interconnect.erase(interconnect.begin() + it);
+					return {};
+				});
+		else {
+			interconnect.erase(interconnect.begin() + it);
+			return {};
+		}
+		} catch (const std::exception& e) {
+			return std::unexpected{e.what()};
+		} catch (std::string_view e) {
+			return std::unexpected{e};
+		}
 	else {
 		//throw std::out_of_range("Out of bounds interconnect look-up");
 		return std::unexpected("Requested element is out-of-bounds"sv);

@@ -41,7 +41,7 @@ protected:
 	virtual std::expected<void, std::string_view> act() = 0; //!< This calls back of the 
 	virtual void diagramo() const = 0; //!< This refreshes the diagram of current circuit.
 public:
-	constexpr inline static std::string_view help(); //!< Pretty self-explanatory. Returns a view to the help string.
+	constexpr inline static std::string_view help() noexcept; //!< Pretty self-explanatory. Returns a view to the help string.
 	virtual bool refresh_and_wait() = 0; //!< This is the top level function. All errors are handles here.
 	//static void erro(std::string_view);
 };
