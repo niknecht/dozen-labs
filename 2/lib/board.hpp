@@ -33,7 +33,7 @@ class circuit::Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
-	Board() : interconnect{} {interconnect.reserve(3);} // <-- The hardest question in programming (is this
+	Board() = default;//: interconnect{} {interconnect.reserve(3);} // <-- The hardest question in programming (is this
 
 	Board(const Board& other) noexcept = default; // TODO Conditional noexcept everywhere here
 	Board(Board&& other) noexcept = default;
@@ -44,7 +44,8 @@ public:
 
 	// @param viable_range 
 	template <std::ranges::viewable_range  t_R>
-	Board(t_R&& r); // Reference collapsing
+	Board(t_R&& r)
+	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>);
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	

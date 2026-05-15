@@ -82,13 +82,13 @@ void cli::cli_mode::diagramo() const {
 }
 
 std::expected<void, std::string_view> cli::cli_mode::accepti() {
-	std::string query;
-	std::getline(std::cin, query);
+	std::string querys;
+	std::getline(std::cin, querys);
 	std::vector<std::string_view> request_tokens; // a view over request
 
-	
+	std::string_view queryv{querys};
 
-	auto request = query | std::views::chunk_by([](auto a, auto b){return (!std::isspace(a) && !isspace(b));});
+	auto request = queryv | std::views::chunk_by([](char a, char b){return !(std::isspace(static_cast<unsigned char>(a))) && (!std::isspace(static_cast<unsigned char>(b)));});
 
 	for(auto token : request){
 		auto str = token.begin();

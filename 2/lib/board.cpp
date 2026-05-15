@@ -17,7 +17,9 @@ using namespace circuit;
 //		{}
 
 template <std::ranges::viewable_range t_R>
-Board::Board(t_R&& r) :interconnect {(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>} {
+Board::Board(t_R&& r) 
+requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>)
+:interconnect {(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>}{
 } // I love ranges
   // So, this actually also makes construction of Board from an individual wire possible (required in the assignment)
 

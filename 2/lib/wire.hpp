@@ -21,7 +21,7 @@ class AXIPacket;
 // Yep, the fourth rewrite, yes, yes, seriously. This one uses AXI4-Stream
 
 class Basic_Wire {
-private:
+protected:
 	std::pair<float, float> uv;
 public:
 	Basic_Wire(std::pair<float, float>) noexcept;
@@ -55,10 +55,10 @@ public:
 	{
 	}
 
-	InWire(InWire&&) = default;
-	InWire(const InWire&) = default;
-	InWire& operator=(const InWire&) = default;
-	InWire& operator=(InWire&&) = default;
+	InWire(InWire&& w);// TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+	InWire(const InWire&);
+	InWire& operator=(const InWire&);
+	InWire& operator=(InWire&&);
 
 	AXIPacket make_tethered(auto&&... args) noexcept //!< @example InWire a{0.5f, -0.8f}; OutWire b = a.make_tethered(0.2f, -4.5f);
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from
@@ -88,10 +88,10 @@ public:
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 	{}
 
-	OutWire(OutWire&&) = default;
-	OutWire(const OutWire&) = default;
-	OutWire& operator=(const OutWire&) = default;
-	OutWire& operator=(OutWire&&) = default;
+	OutWire(OutWire&&) ;
+	OutWire(const OutWire&) ;
+	OutWire& operator=(const OutWire&);
+	OutWire& operator=(OutWire&&) ;
 
 	AXIPacket make_tethered(auto&&... args) noexcept //!< @example OutWire a{0.5f, -0.8f}; InWire b = a.make_tethered(0.2f, -4.5f);
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from

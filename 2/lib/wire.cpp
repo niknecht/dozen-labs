@@ -23,6 +23,83 @@ bool Basic_Wire::operator==(const Basic_Wire& other) const {
 	return uv == other.uv;
 }
 
+InWire::InWire(InWire&& w) :Basic_Wire(w), tethered(w.tethered){
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+InWire::InWire(const InWire& w) :Basic_Wire(w), tethered(w.tethered){
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+InWire& InWire::operator=(const InWire& w) {
+	this->uv = w.uv;
+	this->tethered = w.tethered;
+
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+
+	return *this;
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+InWire& InWire::operator=(InWire&& w) {
+	this->uv = w.uv;
+	this->tethered = w.tethered;
+
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+
+	return *this;
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+OutWire::OutWire(OutWire&& w) :Basic_Wire(w), tethered(w.tethered){
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+OutWire::OutWire(const OutWire& w) :Basic_Wire(w), tethered(w.tethered){
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+OutWire& OutWire::operator=(const OutWire& w) {
+	this->uv = w.uv;
+	this->tethered = w.tethered;
+
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+
+	return *this;
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+OutWire& OutWire::operator=(OutWire&& w) {
+	this->uv = w.uv;
+	this->tethered = w.tethered;
+
+	if(w.tethered.has_value()) {
+		w.tethered.value().get().tethered = *this;
+	}
+
+	return *this;
+} // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+
+/*InWire::InWire(auto&&... args) noexcept
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
+{
+}
+
+OutWire::OutWire(auto&&... args) noexcept // Standard forwarding constructor (idk, blame chatgpt)
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
+{}*/
+
 /*InWire::InWire(auto&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 {
