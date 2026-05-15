@@ -25,9 +25,6 @@ namespace cli {
 	std::ostream& operator<<(std::ostream& cout, const circuit::Board& b);
 }
 
-enum class op_t {
-	
-};
 
 /*!
  * The class that encapsulates some app classes, enabling polimorphism to cli mode and gui mode.

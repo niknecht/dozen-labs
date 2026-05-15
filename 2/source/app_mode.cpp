@@ -44,7 +44,6 @@ constexpr inline std::string_view app::app_t::help() noexcept{
 void cli::cli_mode::diagramo() const {
 	std::vector<std::optional<std::pair<size_t, std::reference_wrapper<const InWire>>>> in;
 	
-	//std::vector<std::variant<InWire, OutWire>> local_dev = device.vec(); // UI finctions. Don't care about performance
 	for(auto it = device.begin(); it < device.end(); ++it)
 		in.push_back(std::visit(circuit::Board::overloads(
 						[it, begin = device.begin()](const InWire& w)
@@ -87,7 +86,7 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 	std::getline(std::cin, query);
 	std::vector<std::string_view> request_tokens; // a view over request
 
-
+	
 
 	auto request = query | std::views::chunk_by([](auto a, auto b){return (!std::isspace(a) && !isspace(b));});
 
@@ -106,6 +105,9 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 
 	using namespace std::string_view_literals;
 	if(request_tokens[0uz] == "etch"sv){
+		if(request_tokens.size()!=4uz)
+			return std::unexpected("Syntax error: expected 'etch <x: float> <y: float> <i | o>'");
+
 		using namespace std::string_view_literals;
 
 		char* strtof_success {};
@@ -138,6 +140,9 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		return {};
 	}
 	else if(request_tokens[0uz] == "integrate"sv){
+		if(request_tokens.size()!=3uz)
+			return std::unexpected("Syntax error: expected 'integrate <pos1: sz> <pos2: sz>'");
+
 		auto pos1 {~0x0uz}, pos2 {~0x0uz};
 
 		const auto pos1_token {request_tokens[1uz]};
@@ -158,6 +163,9 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		return {};
 	}
 	else if(request_tokens[0uz] == "dntegrate"sv){
+		if(request_tokens.size()!=2uz)
+			return std::unexpected("Syntax error: expected 'dntegrate <sz>'");
+
 		auto pos {~0x0uz};
 		const auto pos_token {request_tokens[1uz]};
 		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
@@ -168,6 +176,9 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		return {};
 	}
 	else if(request_tokens[0uz] == "move"sv){
+		if(request_tokens.size()!=4uz)
+			return std::unexpected("Syntax error: expected 'move <sz> <x: float> <y: float>'");
+
 		auto pos {~0x0uz};
 		const auto pos_token {request_tokens[1uz]};
 		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
@@ -192,6 +203,9 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		return {};
 	}
 	else if(request_tokens[0uz] == "remove"sv) {
+		if(request_tokens.size()!=2uz)
+			return std::unexpected("Syntax error: expected 'remove <sz>'");
+
 		auto pos {~0x0uz};
 		const auto pos_token {request_tokens[1uz]};
 		const auto [ptr, err] = std::from_chars(pos_token.data(), pos_token.data() + pos_token.size(), pos);
@@ -202,7 +216,7 @@ std::expected<void, std::string_view> cli::cli_mode::accepti() {
 		return {};
 	}
 
-	return std::unexpected("No ctrl paths satisfied the expression.");
+	return std::unexpected("Syntax error: No ctrl paths satisfied the expression.");
 }
 
 std::expected<void, std::string_view> cli::cli_mode::act() {

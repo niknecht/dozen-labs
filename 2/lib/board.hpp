@@ -33,7 +33,7 @@ class circuit::Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
-	Board() = default;
+	Board() : interconnect{} {interconnect.reserve(3);} // <-- The hardest question in programming (is this
 
 	Board(const Board& other) noexcept = default; // TODO Conditional noexcept everywhere here
 	Board(Board&& other) noexcept = default;

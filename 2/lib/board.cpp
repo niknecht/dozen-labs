@@ -61,7 +61,17 @@ std::expected <void, std::string_view> Board::add_link(const size_t lhs, const s
 }
 
 std::expected<void, std::string_view> Board::rm_link(const size_t lhs) {
-	return std::visit(overloads([](auto& wire){return wire.disconnect();}), interconnect[lhs]);
+	try {
+
+		return std::visit(overloads([](auto& wire){return wire.disconnect();}), interconnect.at(lhs));
+
+	} catch (const std::exception& e) {
+		return std::unexpected(e.what());
+	} catch (const std::string_view e) {
+		return std::unexpected(e);
+	} catch (...) {
+		return std::unexpected("Unknown error thrown from rm_link");
+	}
 }
 
 std::expected<void, std::string_view> Board::remove(const size_t it) {
@@ -82,6 +92,8 @@ std::expected<void, std::string_view> Board::remove(const size_t it) {
 			return std::unexpected{e.what()};
 		} catch (std::string_view e) {
 			return std::unexpected{e};
+		} catch (...) {
+			return std::unexpected("Unknown error thrown from remove");
 		}
 	else {
 		//throw std::out_of_range("Out of bounds interconnect look-up");
