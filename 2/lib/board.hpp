@@ -6,6 +6,10 @@
 #include <vector>
 #include <expected>
 #include <string_view>
+#include <ranges>
+#include <algorithm>
+#include <utility>
+
 
 /*!
  * @file
@@ -42,7 +46,6 @@ public:
 
 	~Board() = default;
 
-	// @param viable_range 
 	template <std::ranges::viewable_range  t_R>
 	Board(t_R&& r)
 	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>);
@@ -56,7 +59,7 @@ public:
 		return std::forward<std::remove_reference_t<decltype(self)>>(self);
 	}
 	//auto operator[](const size_t i) & -> std::variant<InWire, OutWire>&;
-	auto operator[](this auto&& self, size_t i) -> decltype(std::forward<Board>(self).interconnect.at(i)) // accesing temporary's member should enable move
+	auto operator[](this auto&& self, size_t i) -> decltype(std::forward<Board>(self).interconnect.at(i)) // accesing temporary's member should enable move, but, for the sake of less testing, we do not guarantee that
 	{
 		return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i);
 	}

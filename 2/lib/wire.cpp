@@ -130,10 +130,10 @@ template<class Base, class Product>
 AXIPacket<Base, Product>::AXIPacket(AXIPacket&& other) : slave(other.slave), master(other.master), slub(std::move(other.slub))
 {}
 
-template<class Base, class Product>
+/*template<class Base, class Product>
 auto AXIPacket<Base, Product>::get_slub(this auto&&  self) noexcept-> decltype(auto) { //noexcept
 	return std::forward<std::remove_reference_t<decltype(self)>>(self).slub;
-}
+}*/
 
 InWire::InWire(::AXIPacket<OutWire, InWire>&& pkt) : InWire(pkt.get_slub())
 {

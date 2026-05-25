@@ -110,14 +110,16 @@ public:
 
 
 template <class Base, class Product> // <slave, master>
-class AXIPacket { // AXI-S protocol Valcum tu FPGA
+class AXIPacket { // AXI-S protocol
 private:
 	Product slub; // TUSER
 	std::optional<std::reference_wrapper<Base>> slave; // TUSER + TREADY -> set on create
 	std::optional<std::reference_wrapper<Product>> master; // TDATA + TVALID -> make transmittion whenever there's a handshake on destruction
 	// Newly created Wire transmitts its adress to the old slave
 public:
-	auto get_slub(this auto&& self) noexcept -> decltype(auto);  // Use expected for incorrect ABI usage
+	auto get_slub(this auto&& self) noexcept -> decltype(auto){  // Use expected for incorrect ABI usage
+		return std::forward<std::remove_reference_t<decltype(self)>>(self).slub;
+	}
 	void set_transmitter(const decltype(master)) noexcept;   // Use exceptions for design errors within the Wire classes
 								// Specifically here, there's nothing to go wrong
 	AXIPacket(Base&, auto&&... args)
