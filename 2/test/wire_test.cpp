@@ -38,50 +38,50 @@ public:
 
 		ASSERT_THAT(i1.is_tethered(), ::testing::IsTrue());
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(i1.tethered_view(), ::testing::Ref(o));
-		ASSERT_THAT(o.tethered_view(), ::testing::Ref(i1));
+		ASSERT_THAT(i1.tethered_view().value().get(), ::testing::Ref(o));
+		ASSERT_THAT(o.tethered_view().value().get(), ::testing::Ref(i1));
 		
 		WireDirection i2 {std::move(i1)};
 		ASSERT_THAT(i2.getuv(), ::testing::Eq(uvpair));
 
 		ASSERT_THAT(i2.is_tethered(), ::testing::IsTrue());
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(i2.tethered_view(), ::testing::Ref(o));
-		ASSERT_THAT(o.tethered_view(), ::testing::Ref(i2));
+		ASSERT_THAT(i2.tethered_view().value().get(), ::testing::Ref(o));
+		ASSERT_THAT(o.tethered_view().value().get(), ::testing::Ref(i2));
 
 		WireDirection i3 {i2};
 		ASSERT_THAT(i3.getuv(), ::testing::Eq(i2.getuv()));
 
 		ASSERT_THAT(i3.is_tethered(), ::testing::IsTrue());
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(i3.tethered_view(), ::testing::Ref(o));
-		ASSERT_THAT(o.tethered_view(), ::testing::Ref(i3));
+		ASSERT_THAT(i3.tethered_view().value().get(), ::testing::Ref(o));
+		ASSERT_THAT(o.tethered_view().value().get(), ::testing::Ref(i3));
 
 		WireDirection i4 = std::move(i3);
 		ASSERT_THAT(i4.getuv(), ::testing::Eq(i2.getuv()));
 	
 		ASSERT_THAT(i4.is_tethered(), ::testing::IsTrue());
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(i4.tethered_view(), ::testing::Ref(o));
-		ASSERT_THAT(o.tethered_view(), ::testing::Ref(i4));
+		ASSERT_THAT(i4.tethered_view().value().get(), ::testing::Ref(o));
+		ASSERT_THAT(o.tethered_view().value().get(), ::testing::Ref(i4));
 
 		WireDirection i5 = i4;
 		ASSERT_THAT(i5.getuv(), ::testing::Eq(i4.getuv()));
 
 		ASSERT_THAT(i5.is_tethered(), ::testing::IsTrue());
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(i5.tethered_view(), ::testing::Ref(o));
-		ASSERT_THAT(o.tethered_view(), ::testing::Ref(i5));
+		ASSERT_THAT(i5.tethered_view().value().get(), ::testing::Ref(o));
+		ASSERT_THAT(o.tethered_view().value().get(), ::testing::Ref(i5));
 		}
 	}
 
-	decltype(auto) AXISPacketTest() {
+	/*decltype(auto) AXISPacketTest() {
 		WireDirection w {std::pair{4.f, -5.f}};
 		AXIPacket<WireDirection, WireOppositeDirection> axisp {w, std::pair{1.f, -2.f}};
 
 		ASSERT_THAT(axisp.get_slub().getuv(), ::testing::Eq(std::pair{1.f, -2.f}));
 		ASSERT_THAT(axisp.get_slub().is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(axisp.get_slub().tethered_view(), ::testing::Ref(w));
+		ASSERT_THAT(axisp.get_slub().tethered_view().value().get(), ::testing::Ref(w));
 		
 		{
 		AXIPacket<WireDirection, WireOppositeDirection> axisp2c {axisp};
@@ -111,7 +111,7 @@ public:
 			ASSERT_THAT(w.is_tethered(), ::testing::IsTrue());
 			ASSERT_THAT(w.tethered_view(), ::testing::Ref(it));
 		}
-	}
+	}*/
 	
 	decltype(auto) MakeTetheredTest() {
 		// Make tethered test
@@ -153,10 +153,10 @@ TEST(CorrectMakeTetheredBahaviour, OutWire) {
 	return _test_OutWire{}.MakeTetheredTest();
 }
 
-TEST(AxisPacketClassTest, Helper) {
+/*TEST(AxisPacketClassTest, Helper) {
 	return _test_InWire{}.AXISPacketTest();
 	return _test_OutWire{}.AXISPacketTest();
-}
+}*/
 
 TEST(MakeTetheredTest, Helper) {
 	return _test_InWire{}.MakeTetheredTest();

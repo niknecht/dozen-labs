@@ -55,7 +55,7 @@ public:
 	}
 
 	InWire(InWire&& w);// TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
-	InWire(const InWire&);
+	InWire(InWire&);
 	InWire& operator=(const InWire&);
 	InWire& operator=(InWire&&);
 
@@ -88,7 +88,7 @@ public:
 	{}
 
 	OutWire(OutWire&&) ;
-	OutWire(const OutWire&) ;
+	OutWire(OutWire&) ;
 	OutWire& operator=(const OutWire&);
 	OutWire& operator=(OutWire&&) ;
 
@@ -125,7 +125,7 @@ public:
 	requires(std::is_constructible_v<Product, decltype(args)...>);
 
 	AXIPacket(AXIPacket&&); // Do I want to move an optional that is a reference_wrapper?
-	AXIPacket(const AXIPacket&) = default;
+	AXIPacket(AXIPacket&) = default;
 
 	~AXIPacket();
 };

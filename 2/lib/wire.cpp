@@ -29,7 +29,7 @@ InWire::InWire(InWire&& w) :Basic_Wire(w), tethered(w.tethered){
 	}
 } // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
 
-InWire::InWire(const InWire& w) :Basic_Wire(w), tethered(w.tethered){
+InWire::InWire(InWire& w) :Basic_Wire(w), tethered(w.tethered){
 	if(w.tethered.has_value()) {
 		w.tethered.value().get().tethered = *this;
 	}
@@ -63,7 +63,7 @@ OutWire::OutWire(OutWire&& w) :Basic_Wire(w), tethered(w.tethered){
 	}
 } // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
 
-OutWire::OutWire(const OutWire& w) :Basic_Wire(w), tethered(w.tethered){
+OutWire::OutWire(OutWire& w) :Basic_Wire(w), tethered(w.tethered){
 	if(w.tethered.has_value()) {
 		w.tethered.value().get().tethered = *this;
 	}
