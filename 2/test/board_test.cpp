@@ -218,10 +218,10 @@ TEST(MoveUV, Board) {
 
 	// Preserves vector in the valid state && changes the uv coordinates of only the elements specified.
 	ASSERT_EQ(b.vec().size(), 4uz);
-	EXPECT_EQ(std::get<InWire>(b[0uz]).getuv(), std::pair{9.f, -10.f});
+	EXPECT_THAT(std::get<InWire>(b[0uz]).getuv(), ::testing::Eq(std::pair<float, float>(9.f, -10.f)));
 	EXPECT_EQ(std::get<OutWire>(b[1uz]).getuv(), o1.getuv());
 	EXPECT_EQ(std::get<InWire>(b[2uz]).getuv(), i2.getuv());
-	EXPECT_EQ(std::get<OutWire>(b[3uz]).getuv(), std::pair{11.f, -12.f});
+	EXPECT_THAT(std::get<OutWire>(b[3uz]).getuv(), ::testing::Eq(std::pair{11.f, -12.f}));
 	ASSERT_TRUE(std::get<InWire>(b[2uz]).is_tethered());
 	ASSERT_TRUE(std::get<OutWire>(b[3uz]).is_tethered());
 	EXPECT_FALSE(std::get<InWire>(b[0uz]).is_tethered()); 

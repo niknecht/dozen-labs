@@ -48,7 +48,10 @@ public:
 
 	template <std::ranges::viewable_range  t_R>
 	Board(t_R&& r)
-	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>);
+	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>)
+		:interconnect {(std::forward<t_R>(r) | std::views::transform([](auto&& x){ return std::move(x); })) | std::ranges::to<decltype(interconnect)>()} {
+			//(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>}{
+	}
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	

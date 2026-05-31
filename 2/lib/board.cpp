@@ -15,14 +15,14 @@ using namespace circuit;
 
 //Board::Board(Board&& other) noexcept : interconnect{std::forward<Board>(other).interconnect}
 //		{}
-
+/*
 template <std::ranges::viewable_range t_R>
 Board::Board(t_R&& r) 
 requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>)
 :interconnect {(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>}{
 } // I love ranges
   // So, this actually also makes construction of Board from an individual wire possible (required in the assignment)
-
+*/
 /*auto Board::operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self)){
 	std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.push_back(std::forward<decltype(el)>(el));
 	return std::forward<std::remove_reference_t<decltype(self)>>(self);

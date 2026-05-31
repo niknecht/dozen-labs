@@ -18,7 +18,6 @@ class OutWire;
 template<class, class>
 class AXIPacket;
 
-// Yep, the fourth rewrite, yes, yes, seriously. This one uses AXI4-Stream
 
 class Basic_Wire {
 protected:
@@ -130,3 +129,34 @@ public:
 
 	~AXIPacket();
 };
+
+auto InWire::make_tethered(auto&&... args) noexcept -> AXIPacket //!< @example InWire a{0.5f, -0.8f}; OutWire b = a.make_tethered(0.2f, -4.5f);
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) {
+	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
+}
+auto OutWire::make_tethered(auto&&... args) noexcept -> AXIPacket
+requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) 
+{
+	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
+}
+
+template<class Base, class Product>
+AXIPacket<Base, Product>::AXIPacket(Base& owner, auto&&... args)
+requires(std::is_constructible_v<Product, decltype(args)...>) : slave(owner), slub(std::forward<decltype(args)>(args)...)
+{
+}
+
+template<class Base, class Product>
+AXIPacket<Base, Product>::AXIPacket(AXIPacket&& other) : slave(other.slave), master(other.master), slub(std::move(other.slub))
+{}
+
+template <class Base, class Product>
+AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
+	if(master && slave)
+		slave.value().get().tethered = this->slub;
+}
+
+template<class Base, class Product>
+void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster) noexcept {
+	this->master = trueMaster;
+}

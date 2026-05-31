@@ -109,7 +109,7 @@ OutWire::OutWire(auto&&... args) noexcept // Standard forwarding constructor (id
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 {}*/
 
-AXIPacket<InWire, OutWire> InWire::make_tethered(auto&&... args) noexcept
+/*AXIPacket<InWire, OutWire> InWire::make_tethered(auto&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>)
 {
 	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
@@ -118,17 +118,19 @@ AXIPacket<OutWire, InWire> OutWire::make_tethered(auto&&... args) noexcept
 requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) 
 {
 	return AXIPacket{*this, std::forward<decltype(args)>(args)...}; // RVO + C++17 guaranteed copy ellision
-}
+}*/
 
+/*
 template<class Base, class Product>
 AXIPacket<Base, Product>::AXIPacket(Base& owner, auto&&... args)
 requires(std::is_constructible_v<Product, decltype(args)...>) : slave(owner), slub(std::forward<decltype(args)>(args)...)
 {
-}
+}*/
 
+/*
 template<class Base, class Product>
 AXIPacket<Base, Product>::AXIPacket(AXIPacket&& other) : slave(other.slave), master(other.master), slub(std::move(other.slub))
-{}
+{}*/
 
 /*template<class Base, class Product>
 auto AXIPacket<Base, Product>::get_slub(this auto&&  self) noexcept-> decltype(auto) { //noexcept
@@ -144,11 +146,11 @@ OutWire::OutWire(::AXIPacket<InWire, OutWire>&& pkt) : OutWire(pkt.get_slub())
 	pkt.set_transmitter(*this); // Handshake!!
 }
 
-template <class Base, class Product>
+/*template <class Base, class Product>
 AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
 	if(master && slave)
 		slave.get().tethered = this->slub;
-}
+}*/
 // usage:
 // board.push_back<>(make_tethered(board[5]))
 // make_tethered returns axi_packet (owns slub)
@@ -156,10 +158,10 @@ AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
 // and you're done
 
 
-template<class Base, class Product>
+/*template<class Base, class Product>
 void AXIPacket<Base, Product>::set_transmitter(const decltype(master) trueMaster) noexcept {
 	this->master = trueMaster;
-}
+}*/
 
 OutWire& OutWire::connect(InWire& other) noexcept{
 	this->tethered = other;

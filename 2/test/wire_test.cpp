@@ -11,7 +11,6 @@ private:
 	static_assert(std::is_same_v<WireDirection, InWire> || std::is_same_v<WireDirection, OutWire>);
 	using WireOppositeDirection = std::conditional_t<std::is_same_v<WireDirection, InWire>, OutWire, InWire>;
 public:
-	_test_WireCRTP ();
 
 	decltype(auto) ToBasicTest() 
 	{
