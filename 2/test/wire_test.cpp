@@ -75,7 +75,7 @@ public:
 		}
 	}
 
-	/*decltype(auto) AXISPacketTest() {
+	decltype(auto) AXISPacketTest() {
 		WireDirection w {std::pair{4.f, -5.f}};
 		AXIPacket<WireDirection, WireOppositeDirection> axisp {w, std::pair{1.f, -2.f}};
 
@@ -111,7 +111,7 @@ public:
 			ASSERT_THAT(w.is_tethered(), ::testing::IsTrue());
 			ASSERT_THAT(w.tethered_view(), ::testing::Ref(it));
 		}
-	}*/
+	}
 	
 	decltype(auto) MakeTetheredTest() {
 		// Make tethered test
@@ -121,8 +121,8 @@ public:
 
 		ASSERT_THAT(o.is_tethered(), ::testing::IsTrue);
 		ASSERT_THAT(i.is_tethered(), ::testing::IsTrue);
-		EXPECT_THAT(i.tethered_view(), ::testing::Ref(o));
-		EXPECT_THAT(o.tethered_view(), ::testing::Ref(i));
+		EXPECT_THAT(i.tethered_view().value().get(), ::testing::Ref(o));
+		EXPECT_THAT(o.tethered_view().value().get(), ::testing::Ref(i));
 		}
 	}
 };

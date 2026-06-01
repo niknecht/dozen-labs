@@ -145,6 +145,14 @@ OutWire::OutWire(::AXIPacket<InWire, OutWire>&& pkt) : OutWire(pkt.get_slub())
 {
 	pkt.set_transmitter(*this); // Handshake!!
 }
+InWire::InWire(::AXIPacket<OutWire, InWire>& pkt) : InWire(pkt.get_slub())
+{
+	pkt.set_transmitter(*this);
+}
+OutWire::OutWire(::AXIPacket<InWire, OutWire>& pkt) : OutWire(pkt.get_slub())
+{
+	pkt.set_transmitter(*this); // Handshake!!
+}
 
 /*template <class Base, class Product>
 AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!

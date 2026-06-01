@@ -41,6 +41,7 @@ public:
 
 
 class InWire : public Basic_Wire {
+	friend AXIPacket<OutWire, InWire>;
 	friend AXIPacket<InWire, OutWire>;
 	friend OutWire;
 	using AXIPacket = AXIPacket<InWire, OutWire>;
@@ -72,10 +73,12 @@ public:
 	std::expected<void, std::string_view> disconnect();
 
 	InWire(::AXIPacket<OutWire, InWire>&&);
+	InWire(::AXIPacket<OutWire, InWire>&);
 };
 
 class OutWire : public Basic_Wire {
 	friend AXIPacket<OutWire, InWire>;
+	friend AXIPacket<InWire, OutWire>;
 	friend InWire;
 	using AXIPacket = AXIPacket<OutWire, InWire>;
 private:
@@ -105,6 +108,7 @@ public:
 	std::expected<void, std::string_view> disconnect();
 
 	OutWire(::AXIPacket<InWire, OutWire>&&);
+	OutWire(::AXIPacket<InWire, OutWire>&);
 };
 
 
@@ -152,8 +156,10 @@ AXIPacket<Base, Product>::AXIPacket(AXIPacket&& other) : slave(other.slave), mas
 
 template <class Base, class Product>
 AXIPacket<Base, Product>::~AXIPacket() { // Clocking event!
-	if(master && slave)
-		slave.value().get().tethered = this->slub;
+	if(master && slave) {
+		slave.value().get().tethered = master.value();//this->slub;
+		master.value().get().connect(slave.value());
+	}
 }
 
 template<class Base, class Product>
