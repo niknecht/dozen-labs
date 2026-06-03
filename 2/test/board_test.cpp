@@ -6,29 +6,40 @@
 #include "../lib/board.hpp"
 
 TEST(Construction, Board) {
+	using namespace std::string_view_literals;
 	// Construct from one wire
 	InWire i1 {std::pair{1.f, -4.f}};
 	OutWire o1 {std::pair{4.f, -2.f}};
-	if (i1 >> o1)
-		;
+	//std::variant<InWire, OutWire> i1w{i1}, o1w{o1};
+	if (!(i1 >> o1))
+		throw "Failed to connect an InWire to an OutWire"sv;
 
 	// Range move/copy correctness
-	{
+
+	//std::vector<std::variant<InWire, OutWire>> vc {};
+	//vc.push_back(i1w);
 	circuit::Board 
-		bc {std::vector<std::variant<InWire, OutWire>>{std::variant<InWire, OutWire>{i1}}};
+		bc {std::vector<std::variant<InWire, OutWire>>{i1}};
 	auto v = std::vector<std::variant<InWire, OutWire>>{std::variant<InWire, OutWire>{i1}};
 	circuit::Board
 		bm {std::move(v)};
 
-	for(auto& it : std::vector<circuit::Board>{bc, bm}) {
+	std::vector<circuit::Board> vb{bc, bm};
+	for(auto& it : vb) {
 		ASSERT_THAT(it.vec().size(), ::testing::Eq(1uz));
 		EXPECT_THAT(std::get<InWire>(it[0uz]).getuv(), ::testing::Eq(i1.getuv()));
 		ASSERT_THAT(std::get<InWire>(it[0uz]).is_tethered(), ::testing::IsTrue());
-		EXPECT_THAT(std::get<InWire>(it[0uz]).tethered_view(), ::testing::Ref(o1));
+		EXPECT_THAT(std::get<InWire>(it[0uz]).tethered_view().value().get(), ::testing::Ref(o1));
 		ASSERT_THAT(o1.is_tethered(), ::testing::IsTrue());
-		EXPECT_THAT(o1.tethered_view(), ::testing::Ref(std::get<InWire>(it[0uz])));
+		EXPECT_THAT(o1.tethered_view().value().get(), ::testing::Ref(std::get<InWire>(it[0uz])));
 	}
-	}
+	/*	ASSERT_THAT(bc.vec().size(), ::testing::Eq(1uz));
+		EXPECT_THAT(std::get<InWire>(bc[0uz]).getuv(), ::testing::Eq(i1.getuv()));
+		ASSERT_THAT(std::get<InWire>(bc[0uz]).is_tethered(), ::testing::IsTrue());
+		EXPECT_THAT(std::get<InWire>(bc[0uz]).tethered_view().value().get(), ::testing::Ref(o1));
+		ASSERT_THAT(o1.is_tethered(), ::testing::IsTrue());
+		EXPECT_THAT(o1.tethered_view().value().get(), ::testing::Ref(std::get<InWire>(bc[0uz])));
+	}*/
 }
 
 TEST(Extend, Board) {
@@ -47,12 +58,12 @@ TEST(Extend, Board) {
 	}
 
 	EXPECT_THAT(std::get<InWire>(b[0uz]).getuv(), ::testing::Eq(i1.getuv()));
-	EXPECT_THAT(std::get<InWire>(b[1uz]).getuv(), ::testing::Eq(o1.getuv()));
+	EXPECT_THAT(std::get<OutWire>(b[1uz]).getuv(), ::testing::Eq(o1.getuv()));
 
 	ASSERT_THAT(std::get<InWire>(b[0uz]).is_tethered(), ::testing::IsTrue());
-	ASSERT_THAT(std::get<InWire>(b[0uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[1uz])));
+	ASSERT_THAT(std::get<InWire>(b[0uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[1uz])));
 	ASSERT_THAT(std::get<OutWire>(b[1uz]).is_tethered(), ::testing::IsTrue());
-	ASSERT_THAT(std::get<OutWire>(b[1uz]).tethered_view(), ::testing::Ref(std::get<InWire>(b[0uz])));
+	ASSERT_THAT(std::get<OutWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<InWire>(b[0uz])));
 	}
 }
 
@@ -71,9 +82,9 @@ TEST(CreateFromMany, Board) {
 	EXPECT_THAT(std::get<OutWire>(b[1uz]).getuv(), ::testing::Eq(o1.getuv()));
 
 	ASSERT_THAT(std::get<InWire>(b[0uz]).is_tethered(), ::testing::IsTrue());
-	EXPECT_THAT(std::get<InWire>(b[0uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[1uz])));
+	EXPECT_THAT(std::get<InWire>(b[0uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[1uz])));
 	ASSERT_THAT(std::get<OutWire>(b[1uz]).is_tethered(), ::testing::IsTrue());
-	EXPECT_THAT(std::get<OutWire>(b[1uz]).tethered_view(), ::testing::Ref(std::get<InWire>(b[0uz])));
+	EXPECT_THAT(std::get<OutWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<InWire>(b[0uz])));
 	}
 }
 
@@ -98,9 +109,9 @@ TEST(CopyMoveAssign, Board) {
 	for (auto& it : std::vector{bc, bca, bm, bma}) {
 		ASSERT_THAT(it.vec().size(), ::testing::Eq(b.vec().size()));
 		ASSERT_THAT(std::get<InWire>(it[0uz]).is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(std::get<InWire>(b[0uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[1uz])));
+		ASSERT_THAT(std::get<InWire>(b[0uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[1uz])));
 		ASSERT_THAT(std::get<OutWire>(b[1uz]).is_tethered(), ::testing::IsTrue());
-		ASSERT_THAT(std::get<OutWire>(b[1uz]).tethered_view(), ::testing::Ref(std::get<InWire>(b[0uz])));
+		ASSERT_THAT(std::get<OutWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<InWire>(b[0uz])));
 	}
 	}
 }
@@ -133,9 +144,9 @@ TEST(AddLink, Board) {
 
 	// Binds two wires together in the orderly manner
 	ASSERT_TRUE(std::get<InWire>(b[0uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[0uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[1uz])));
+	EXPECT_THAT(std::get<InWire>(b[0uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[1uz])));
 	ASSERT_TRUE(std::get<InWire>(b[1uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[1uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[0uz])));
+	EXPECT_THAT(std::get<InWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[0uz])));
 }
 
 TEST(RmLink, Board) {
@@ -145,7 +156,7 @@ TEST(RmLink, Board) {
 	OutWire o2{std::pair{7.f, -8.f}};
 	if(!(i2 >> o2))
 		FAIL();
-	if(!(i1 >> o2))
+	if(!(i1 >> o1))
 		FAIL();
 
 	circuit::Board b {std::vector<std::variant<InWire, OutWire>>{i1, o1, i2, o2}};
@@ -161,8 +172,8 @@ TEST(RmLink, Board) {
 	EXPECT_EQ(std::get<OutWire>(b[3uz]).getuv(), o2.getuv());
 	ASSERT_TRUE(std::get<InWire>(b[2uz]).is_tethered());
 	ASSERT_TRUE(std::get<OutWire>(b[3uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[2uz]), ::testing::Ref(std::get<OutWire>(b[3uz])));
-	EXPECT_THAT(std::get<OutWire>(b[3uz]), ::testing::Ref(std::get<InWire>(b[2uz])));
+	EXPECT_THAT(std::get<InWire>(b[2uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[3uz])));  // !!!!!
+	EXPECT_THAT(std::get<OutWire>(b[3uz]).tethered_view().value().get(), ::testing::Ref(std::get<InWire>(b[2uz])));  // !!!!!
 
 	// Removes the binding between two wires in the orderly manner
 	ASSERT_FALSE(std::get<InWire>(b[0uz]).is_tethered());
@@ -176,7 +187,7 @@ TEST(RemoveEl, Board) {
 	OutWire o2{std::pair{7.f, -8.f}};
 	if(!(i2 >> o2))
 		FAIL();
-	if(!(i1 >> o2))
+	if(!(i1 >> o1))
 		FAIL();
 
 	circuit::Board b {std::vector<std::variant<InWire, OutWire>>{i1, o1, i2, o2}};
@@ -191,15 +202,15 @@ TEST(RemoveEl, Board) {
 	EXPECT_EQ(std::get<OutWire>(b[2uz]).getuv(), o2.getuv());
 	ASSERT_TRUE(std::get<InWire>(b[1uz]).is_tethered());
 	ASSERT_TRUE(std::get<OutWire>(b[2uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[1uz]), ::testing::Ref(std::get<OutWire>(b[3uz])));
-	EXPECT_THAT(std::get<OutWire>(b[2uz]), ::testing::Ref(std::get<InWire>(b[2uz])));
+	EXPECT_THAT(std::get<InWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[3uz]))); // !!!!!!
+	EXPECT_THAT(std::get<OutWire>(b[2uz]).tethered_view().value().get(), ::testing::Ref(std::get<InWire>(b[2uz]))); // !!!!
 
 	// Binds two wires together in the orderly manner
 	ASSERT_FALSE(std::get<InWire>(b[0uz]).is_tethered());
 	ASSERT_TRUE(std::get<InWire>(b[2uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[2uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[1uz])));
+	EXPECT_THAT(std::get<InWire>(b[2uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[1uz])));
 	ASSERT_TRUE(std::get<InWire>(b[1uz]).is_tethered());
-	EXPECT_THAT(std::get<InWire>(b[1uz]).tethered_view(), ::testing::Ref(std::get<OutWire>(b[2uz])));
+	EXPECT_THAT(std::get<InWire>(b[1uz]).tethered_view().value().get(), ::testing::Ref(std::get<OutWire>(b[2uz])));
 }
 
 TEST(MoveUV, Board) {

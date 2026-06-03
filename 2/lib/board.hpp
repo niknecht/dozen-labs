@@ -39,7 +39,11 @@ private:
 public:
 	Board() = default;//: interconnect{} {interconnect.reserve(3);} // <-- The hardest question in programming (is this
 
-	Board(const Board& other) noexcept = default; // TODO Conditional noexcept everywhere here
+	Board(const Board& other) noexcept =  default;/* {
+		interconnect.resize(other.interconnect.size()); 
+		for (unsigned int i = 0; i < other.interconnect.size(); ++i) {
+			std::visit([](auto& w, auto& wo){w = wo;}, interconnect[i], other.interconnect[i]);}
+		}*/
 	Board(Board&& other) noexcept = default;
 	Board& operator= (const Board&) noexcept = default;
 	Board& operator= (Board&&) noexcept = default;
@@ -48,10 +52,12 @@ public:
 
 	template <std::ranges::viewable_range  t_R>
 	Board(t_R&& r)
-	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[0])>, std::variant<InWire, OutWire>>)
-		:interconnect {(std::forward<t_R>(r) | std::views::transform([](auto&& x){ return std::move(x); })) | std::ranges::to<decltype(interconnect)>()} {
+	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[std::declval<size_t>()])>, std::variant<InWire, OutWire>>)
+		:interconnect {(std::forward<t_R>(r) | std::views::transform([](auto&& 
+						x){ return std::forward<std::remove_reference_t<decltype(x)>>(x); })) | std::ranges::to<decltype(interconnect)>()} {
+
 			//(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>}{
-	}
+	}		// My guess is, && collapses to & and gets called for const objects here
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	

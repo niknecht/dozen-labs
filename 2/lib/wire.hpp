@@ -25,6 +25,8 @@ protected:
 public:
 	Basic_Wire(std::pair<float, float>) noexcept;
 
+	Basic_Wire() = default;
+
 	Basic_Wire(Basic_Wire&&) = default; // This is just std::pair reallistically
 	Basic_Wire(const Basic_Wire&) = default;
 	Basic_Wire& operator=(const Basic_Wire&) = default;
@@ -46,7 +48,7 @@ class InWire : public Basic_Wire {
 	friend OutWire;
 	using AXIPacket = AXIPacket<InWire, OutWire>;
 private:
-	std::optional<std::reference_wrapper<OutWire>> tethered;
+	mutable std::optional<std::reference_wrapper<OutWire>> tethered;
 	
 	InWire& connect(OutWire&) noexcept; // Agh, shoulda called it integrate
 public:
@@ -55,10 +57,15 @@ public:
 	{
 	}
 
-	InWire(InWire&& w);// TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
+	InWire(InWire&& w);
 	InWire(InWire&);
-	InWire& operator=(const InWire&);
+	InWire& operator=(InWire&);
 	InWire& operator=(InWire&&);
+
+	InWire(const InWire& cr) : InWire(const_cast<InWire&>(cr)) {} // War crimes, but I'm not rewriting half of that class from scratch
+	InWire& operator=(const InWire& ow) {*this = const_cast<InWire&>(ow); return *this;}
+
+	InWire() = default;
 
 	AXIPacket make_tethered(auto&&... args) noexcept //!< @example InWire a{0.5f, -0.8f}; OutWire b = a.make_tethered(0.2f, -4.5f);
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from
@@ -82,7 +89,7 @@ class OutWire : public Basic_Wire {
 	friend InWire;
 	using AXIPacket = AXIPacket<OutWire, InWire>;
 private:
-	std::optional<std::reference_wrapper<InWire>> tethered;
+	mutable std::optional<std::reference_wrapper<InWire>> tethered;
 
 	OutWire& connect(InWire&) noexcept;
 public:
@@ -90,10 +97,15 @@ public:
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>) : Basic_Wire(std::forward<decltype(args)>(args)...)
 	{}
 
-	OutWire(OutWire&&) ;
-	OutWire(OutWire&) ;
-	OutWire& operator=(const OutWire&);
-	OutWire& operator=(OutWire&&) ;
+	OutWire(OutWire&&);
+	OutWire(OutWire&);
+	OutWire& operator=(OutWire&);
+	OutWire& operator=(OutWire&&);
+
+	OutWire(const OutWire& cr) : OutWire{const_cast<OutWire&>(cr)} {} //dc
+	OutWire& operator=(const OutWire& ow) {*this = const_cast<OutWire&>(ow); return *this;}
+
+	OutWire() = default;
 
 	AXIPacket make_tethered(auto&&... args) noexcept //!< @example OutWire a{0.5f, -0.8f}; InWire b = a.make_tethered(0.2f, -4.5f);
 	requires(std::is_constructible_v<Basic_Wire, decltype(args)...>); /*!< @param Paramters that wire of the opposite direction can be constructed from

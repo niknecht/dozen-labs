@@ -43,10 +43,10 @@ private:
 public:
 	explicit etch(circuit::Board&, std::variant<InWire, OutWire>); // Copy ellision on pass
 
-	etch& operator=(const etch&) = default;
+	etch& operator=(etch&) = default;
 	etch& operator=(etch&&) = default;
 	etch(etch&&) = default;
-	etch(const etch&) = default;
+	etch(etch&) = default;
 
 	std::expected<void, std::string_view> operator()() override;
 

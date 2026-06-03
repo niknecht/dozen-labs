@@ -35,7 +35,7 @@ InWire::InWire(InWire& w) :Basic_Wire(w), tethered(w.tethered){
 	}
 } // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
 
-InWire& InWire::operator=(const InWire& w) {
+InWire& InWire::operator=(InWire& w) {
 	this->uv = w.uv;
 	this->tethered = w.tethered;
 
@@ -69,7 +69,7 @@ OutWire::OutWire(OutWire& w) :Basic_Wire(w), tethered(w.tethered){
 	}
 } // TODO: this prolly causes the weird vector behavious unless reserved. Fix this, and fix the OutWire
 
-OutWire& OutWire::operator=(const OutWire& w) {
+OutWire& OutWire::operator=(OutWire& w) {
 	this->uv = w.uv;
 	this->tethered = w.tethered;
 
@@ -184,15 +184,15 @@ std::expected<void, std::string_view> OutWire::operator>> (InWire& other) noexce
 	using namespace std::string_view_literals;
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting."sv);
-	this->connect(other);
-	other.connect(*this);
+	this->tethered = other;
+	other.tethered = *this;
 	return {};
 }
 std::expected<void, std::string_view> InWire::operator>> (OutWire& other) noexcept{
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting.");
-	this->connect(other);
-	other.connect(*this);
+	this->tethered = other;
+	other.tethered  = *this;
 	return {};
 }
 
