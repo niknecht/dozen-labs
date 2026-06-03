@@ -62,7 +62,7 @@ public:
 	InWire& operator=(InWire&);
 	InWire& operator=(InWire&&);
 
-	InWire(const InWire& cr) : InWire(const_cast<InWire&>(cr)) {} // War crimes, but I'm not rewriting half of that class from scratch
+	InWire(const InWire& cr) : InWire(const_cast<InWire&>(cr)) {}
 	InWire& operator=(const InWire& ow) {*this = const_cast<InWire&>(ow); return *this;}
 
 	InWire() = default;

@@ -184,14 +184,14 @@ std::expected<void, std::string_view> OutWire::operator>> (InWire& other) noexce
 	using namespace std::string_view_literals;
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting."sv);
-	this->tethered = other;
+	this->tethered = const_cast<InWire&>(other);
 	other.tethered = *this;
 	return {};
 }
 std::expected<void, std::string_view> InWire::operator>> (OutWire& other) noexcept{
 	if(this->is_tethered() || other.is_tethered())
 		return std::unexpected("Attemted reconnect before disconnecting.");
-	this->tethered = other;
+	this->tethered = const_cast<OutWire&>(other);
 	other.tethered  = *this;
 	return {};
 }
