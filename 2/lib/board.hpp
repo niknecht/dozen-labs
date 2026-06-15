@@ -37,13 +37,9 @@ class circuit::Board {
 private:
 	std::vector<std::variant<InWire, OutWire>> interconnect;
 public:
-	Board() = default;//: interconnect{} {interconnect.reserve(3);} // <-- The hardest question in programming (is this
+	Board() = default;
 
-	Board(const Board& other) noexcept =  default;/* {
-		interconnect.resize(other.interconnect.size()); 
-		for (unsigned int i = 0; i < other.interconnect.size(); ++i) {
-			std::visit([](auto& w, auto& wo){w = wo;}, interconnect[i], other.interconnect[i]);}
-		}*/
+	Board(const Board& other) noexcept =  default;
 	Board(Board&& other) noexcept = default;
 	Board& operator= (const Board&) noexcept = default;
 	Board& operator= (Board&&) noexcept = default;
@@ -55,39 +51,35 @@ public:
 	requires(std::is_same_v<std::remove_reference_t<decltype(std::declval<t_R>()[std::declval<size_t>()])>, std::variant<InWire, OutWire>>)
 		:interconnect {(std::forward<t_R>(r) | std::views::transform([](auto&& 
 						x){ return std::forward<std::remove_reference_t<decltype(x)>>(x); })) | std::ranges::to<decltype(interconnect)>()} {
-
-			//(std::forward<t_R>(r) | std::ranges::move) | std::ranges::to<decltype(interconnect)>}{
-	}		// My guess is, && collapses to & and gets called for const objects here
+	}
 
 	//  Any funcitons that access elements of interconnect are not noexcept befause the user is expected to handle such cases
 	
-	//auto operator+=(std::variant<InWire, OutWire>&&) & -> Board&; // intent to return ref to this, category should be preserved
-	auto operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self)) // intent to return ref to this, category should be preserved
+	auto operator+=(this auto&& self, std::variant<InWire, OutWire>&& el) -> decltype(std::forward<std::remove_reference_t<decltype(self)>>(self)) //!< @rationale Intent to return ref to this, category should be preserved
 	{
 		std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.push_back(std::forward<decltype(el)>(el));
 		return std::forward<std::remove_reference_t<decltype(self)>>(self);
 	}
-	//auto operator[](const size_t i) & -> std::variant<InWire, OutWire>&;
-	auto operator[](this auto&& self, size_t i) -> decltype(std::forward<Board>(self).interconnect.at(i)) // accesing temporary's member should enable move, but, for the sake of less testing, we do not guarantee that
+	auto operator[](this auto&& self, size_t i) -> decltype(std::forward<Board>(self).interconnect.at(i)) //!< @rationale Accesing temporary's member should enable move, but, for the sake of less testing, we do not guarantee that
 	{
 		return std::forward<std::remove_reference_t<decltype(self)>>(self).interconnect.at(i);
 	}
 
-	std::expected<void, std::string_view> add_link(const size_t , const size_t); // ^ Reference collapsing +
+	std::expected<void, std::string_view> add_link(const size_t , const size_t); //!< @see command::integrate
 
-	std::expected<void, std::string_view> rm_link(const size_t);	// + deducing this ^
+	std::expected<void, std::string_view> rm_link(const size_t); //!< @see command::dntegrate
 
-	std::expected<void, std::string_view> remove(const size_t);
+	std::expected<void, std::string_view> remove(const size_t); //!< @see command::remove
 
-	void sort(); // Make this conditional noexcept based on when std::sort throws according to cppref pages in lms.dozen
+	//void sort(); // Make this conditional noexcept based on when std::sort throws according to cppref pages in lms.dozen
 
-	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>);
+	std::expected<void, std::string_view> moveuv(const size_t src, const std::pair<float, float>); //!< @see command::move
 
 	decltype(std::declval<const decltype(Board::interconnect)>())& vec() const noexcept;
 	const decltype(std::declval<const decltype(Board::interconnect)>().begin()) begin() const noexcept;
 	const decltype(std::declval<const decltype(Board::interconnect)>().end()) end() const noexcept;
 
-	// @see See std::variant<...Type>::visit example on cppreference.com
+	
 	template <class ...Ts>
-	struct overloads : Ts... {using Ts::operator()...;}; // See std::variant<...Type>::visit example on cppreference.com
+	struct overloads : Ts... {using Ts::operator()...;}; //!< @see See std::variant<...Type>::visit example on cppreference.com
 };

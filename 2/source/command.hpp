@@ -16,9 +16,7 @@
 #include "../lib/wire.hpp"
 #include "../lib/board.hpp"
 
-namespace command {
-	template<class crtp>
-	class cmdcrtp;
+namespace command { // If any errors arise, add back templated class cmdcrtp
 	class cmd_t;
 
 	class etch;
@@ -28,6 +26,8 @@ namespace command {
 	class remove;
 }
 
+/*! @brief Encapsulates interfaces for commands from the command queue (the command pattern)
+ */
 class command::cmd_t {
 protected:
 	std::reference_wrapper<circuit::Board> board; // Use Board interfaces to acces interconnect through the API
@@ -36,7 +36,8 @@ public:
 	virtual std::expected<void, std::string_view> operator()() = 0;
 };
 
-
+/*! @brief Command pattern command callable class that handles etch operations (adds a wire to the board)
+    @see app::app_t::accepi()*/
 class command::etch : public command::cmd_t {
 private:
 	std::variant<InWire, OutWire> w;
@@ -53,6 +54,8 @@ public:
 	~etch() = default;
 };
 
+/*! @brief Command pattern command callable class that handles integrate operations (connects two wires in the board)
+    @see app::app_t::accepi()*/
 class command::integrate : public command::cmd_t {
 private:
 	std::size_t pos1, pos2;
@@ -69,6 +72,8 @@ public:
 	~integrate() = default;
 };
 
+/*! @brief Command pattern command callable class that handles dntegrate operations (removes a connection between two wires in the board while preserving their validity)
+    @see app::app_t::accepi()*/
 class command::dntegrate : public command::cmd_t {
 private:
 	std::size_t pos;
@@ -85,6 +90,8 @@ public:
 	~dntegrate() = default;
 };
 
+/*! @brief Command pattern command callable class that handles move operations (changes uv coordinates of a wire referenced by the board)
+    @see app::app_t::accepi()*/
 class command::move : public command::cmd_t {
 private:
 	std::pair<float, float> uv;
@@ -102,6 +109,8 @@ public:
 	~move() = default;
 };
 
+/*! @brief Command pattern command callable class that handles remove operations (removes a wire from the board, while preserving any connected wire's validity)
+    @see app::app_t::accepi()*/
 class command::remove : public command::cmd_t {
 private:
 	std::size_t pos;
