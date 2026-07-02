@@ -22,6 +22,7 @@ private:
 public:
 	virtual std::vector<sub::Requirement*> req() = 0;
 	virtual bool verify(const std::vector<sub::Requirement>& check) = 0;
+	virtual bool tryFix(const sub::Requirement& unsatisfied) = 0;
 };
 
 }
