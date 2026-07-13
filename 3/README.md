@@ -75,7 +75,7 @@ classDiagram
     }
 
     class Requirement {
-      Station* source
+      source : std::string
       RequirementPriority priority
     }
 
