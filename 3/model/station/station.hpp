@@ -1,66 +1,41 @@
 #pragma once
 
 #include <memory>
+#include <vector>
+
+#include "freeFunctionRegistry/freeFunctionRegistry.hpp"
 
 namespace sub {
 class Station;
+class StationConcept;
 }
 
-#include "../common/requirement/requirement.hpp"
 
 namespace sub {
 class Station;
 
-class StationConcept;
+class Requirement;
+
 
 template<typename>
 class StationCRTP;
 
-/*! Stations and requirements are closely coupled, restraints on ones must onlo restrict others,
- * most restraints are done on the requirement classes, as they are the less important part of design: 
- * restricting stations further would in theory enforce bigger changes to all other classes every time a 
- * requirement is added, than restricting requirements would, and therefore requirements are supposed to submit to whatever
- * changes have been done to station classes, but not vice versa, and the station classes are allowed to change more or less freely.
- * Of cource, in this case this descision is not as important as adding requirements should not change interface of a station anyway.
- *
- * @see is_Req concept
- */
-template<typename sQM>
+/*template<typename sQM>
 concept is_Station = std::derived_from<sQM, StationCRTP<sQM>> && requires(const sQM& s) {
 	//{sQM(std::string{})} -> std::convertible_to
 	//<StationCRTP<sQM>>;
 	{s.name()} -> std::convertible_to<std::string_view>;
 	{s.lines()} -> std::convertible_to<std::vector<std::string_view>>;
-};
-
-/* Station CRTP base.
- *
- * CRTP is chosen here as a replacement for virtual functions because it allows template arguments in signature.
- * The compile-time mechanism allows functions that define interaction of this station type with all requirement types 
- * (known at compile time) to be declared at compile time, enforcing correct use of requirement-station mechanism at compile time.
- * The lack of interaction between different types of stations makes it very easy to erase station types, making CRTP all the more viable option.
- * New station types should not have new public functions to follow the typical interface.
- *
- * @see CRTP
- */
-template <typename Station>
-class StationCRTP {
-	std::string m_name;
-	std::unique_ptr<Station> m_it;
-public:
-	std::string_view name() const; //!< Non-polymorphic behaviour, doesn't dispatch to the derived
-	std::vector<std::string_view> lines() const; //!< Polymorphic lines() getter. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the derivees.
-	bool tryFix(const is_Req auto&); //!< Polymorphic tryFix method. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the requirements.
-	bool verify(const is_Req auto&) const; //!< Polymorphic verify method. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the requirements.
-
-	StationCRTP<Station>(const std::string_view n); //!< Non-polymorphic behaviour, required in order to have non-polymorphic name() getter
-
-	static_assert(is_Station<Station>);
-};
-
-/*class DirectStation :public StationCRTP<DirectStation> {
-	std::string m_line;
+	{s.req()} -> std::convertible_to<std::vector<sub::Requirement>>;
 };*/
+}
+
+#include "../common/requirement/requirement.hpp"
+#include "../common/traits/stationTraits.hpp"
+#include "../common/traits/requirementTraits.hpp"
+
+namespace sub {
+
 
 /*! Type erased station 
  *
@@ -72,9 +47,9 @@ bool DirectStation::tryFix<ReqLinesExist>(const ReqLinesExist&) { // These two s
 	return false;
 } //TODO Above is actually correct, below is not, below just dispatch to the derived method (defined like above). That could be defined automatically.
 template<>
-template<>
-bool StationCRTP<DirectStation>::verify<ReqLinesExist>(const ReqLinesExist&) const {
-	return false;
+template<> // <typename Station>
+bool StationCRTP<DirectStation>::verify<ReqLinesExist>(const ReqLinesExist& r) const {
+	return false; // return static_cast<const Station>(*this).verify(r);
 }*/
 // ^ New requirement types are supposed to do this ^
 //static_assert(is_Station<StationCRTP<DirectStation>>);
@@ -86,6 +61,7 @@ public:
 
 	virtual std::string_view name() const = 0; //!< Getters are essential in the type erasure approach, else type would not be really erased
 	virtual std::vector<std::string_view> lines() const = 0; //!< Getters are essential in the type erasure approach, else type would not be really erased
+	virtual std::vector<std::unique_ptr<sub::Requirement>> req() const = 0; //!< inteface to the underlying Station class' req method
 	virtual bool tryFix(const sub::Requirement&) = 0;	//!< @see double dispatch
 	virtual bool verify(const sub::Requirement&) const = 0; //!< @see double dispatch
 	virtual std::unique_ptr<StationConcept> clone() const = 0; //!< @see Prototype
@@ -99,12 +75,27 @@ public:
 
 	std::string_view name() const override; //!< Getters are essential in the type erasure approach, else type would not be really erased. Because of nature of the Concept class in type erasure pattern, unfortunately, this has to be virtual.
 	std::vector<std::string_view> lines() const override; //!< Getters are essential in the type erasure approach, else type would not be really erased
+	std::vector<std::unique_ptr<sub::Requirement>> req() const override; //!< This returns a moved list of requirements to the subway system
 	bool tryFix(const sub::Requirement& it) override; //!< @see double dispatch
 	bool verify(const sub::Requirement& it) const override; //!< @see double dispatch
 	std::unique_ptr<StationConcept> clone() const override; //!< @see Prototype
+	
+	/* NOTE: Double dispatch cannot happen before nor after the call-on-pimpl-stage of type erasure
+	*  because StationConcept has virtual methods that cannot be templates and therefore cannot 
+	*  be defined for all specific requirements at once (must use Requirement base) and cannot
+	*  happen after because dispatch functions themselves must be virtual and therefore cannot
+	*  be defined for all specific stations at once. Not having these very simple, declared automatically
+	*  with correctness-of-definitions and safety guaranteed by concepts, would involve type erasing
+	*  Requirements, which is a lot more error-prone. For this reason double dispatch must involve calling 
+	*  the concrete method specification on obj deirectly, but Station concept doesn't have obj, and if it did,
+	*  it would've been a template, meaning the function calling it, which is a virtual function would've had to
+	*  be a template too. This is why double dispatch here is not an option, dispatch must happen at run time
+	*  with a wrapper directly checking obj's type thorugh a virtual, and force reinterpret cast into whatever
+	*  requirement type tag it recieves. */
 
 	StationT obj;
 };
+
 
 
 /*! Type erased station CRTP.
@@ -122,9 +113,13 @@ private:
 
 	friend std::string_view name(const is_Station auto& s); // @see External polymorphism
 	friend std::vector<std::string_view> lines(const is_Station auto& s); //@see External polymorphism
-	friend bool tryFix(is_Station auto& s, const is_Req auto&); //!< @see External polymorphism
-	friend bool verify(const is_Station auto& s, const is_Req auto&); //!< @see External polymorphism
+	friend std::vector<std::unique_ptr<sub::Requirement>> req(const is_Station auto& s);
 public:
+	template<is_Req R>
+	friend bool tryFix(is_Station auto& s, const Requirement&); //!< @see External polymorphism
+	template<is_Req R>
+	friend bool verify(const is_Station auto& s, const Requirement&); //!< @see External polymorphism
+
 	template<typename StationT>
 	Station(StationT); //!< @see Bridge
 
@@ -136,6 +131,7 @@ public:
 
 	std::string_view name() const; //!< Unfortunately, by definition of what type erasure is, this has to also be implemented like all other methods.
 	std::vector<std::string_view> lines() const; //!< This could be just virtual, but tryFix and verify could not.
+	std::vector<std::unique_ptr<sub::Requirement>> req() const;
 
 	/*! Public interfaces to externally polymorphic type erased classes
 	 *
@@ -144,7 +140,7 @@ public:
 	 *
 	 * @see External polymorhism
 	 * */
-	bool tryFix(const is_Req auto&);
+	bool tryFix(const Requirement&);
 
 	/*! Public interfaces to externally polymorphic type erased classes
 	 *
@@ -153,8 +149,84 @@ public:
 	 *
 	 * @see External polymorhism
 	 * */
-	bool verify(const is_Req auto&) const;
+	bool verify(const Requirement&) const;
 };
 
+/*! @see The hardest question in programming*/
+template<is_Station S, is_Req R>
+struct FreeTryFixFunctor {
+	static const FreeTryFixFunctor& it;
 
+	bool operator()(S& s, const Requirement& r) const {return tryFix<S, R>(s, r);}
+	static bool tryFix(S& s, const Requirement& r) {return it(s, r);}
+};
+
+template<is_Station S, is_Req R>
+struct FreeVerifyFunctor {
+	static const FreeVerifyFunctor& it;
+
+	bool operator()(const S& s, const Requirement& r) const {return verify<S, R>(s, r);}
+	static bool verify(const S& s, const Requirement& r) {return it(s, r);}
+
+	FreeVerifyFunctor() = delete;
+};
+
+}
+
+// ---------------------------- Template defintions --------------------------------------------------
+
+namespace sub {
+extern sub::FreeFunctionRegistry registry_tryFix;
+extern sub::FreeFunctionRegistry registry_verify;
+}
+
+// Type erasure boilerplate: prototype initialization
+template<typename StationT> requires(sub::is_Station<StationT>)
+sub::StationModel<StationT>::StationModel(StationT s) :obj{std::move(s)}
+{}
+
+template <typename StationT>
+sub::Station::Station(StationT s) :pimpl(std::make_unique(std::move(s)))
+{}
+
+// Type erasure boilerplate: prototype copy boilerplate
+template <typename StationT> requires(sub::is_Station<StationT>)
+std::unique_ptr<sub::StationConcept> sub::StationModel<StationT>::clone() const {
+	return std::make_unique<StationModel<StationT>>(*this); //TODO std::exchange maybe?????
+}
+
+// Type erasure boilerplate: external polymorphism boilerplate (StationModel:: dispatching difinitions)
+template<typename StationT> requires(sub::is_Station<StationT>)
+bool sub::StationModel<StationT>::tryFix(const sub::Requirement& r) {
+	const std::pair key = {typeid(Station).hash_code(), r.type()};
+	const auto func = reinterpret_cast<bool(*)(StationT&, const Requirement&)>(sub::registry_tryFix.read(key));
+	return func(*obj, r); // Func is guaranteed to exist because its existance is bound to the existance of the tryFix callable for this specific req station pair.
+};
+template<typename StationT> requires(sub::is_Station<StationT>)
+bool sub::StationModel<StationT>::verify(const sub::Requirement& r) const {
+	const std::pair key = {typeid(Station).hash_code(), r.type()};
+	const auto func = reinterpret_cast<bool(*)(const StationT&, const Requirement&)>(sub::registry_verify.read(key));
+	return func(*obj, r); // Func is guaranteed to exist because its existance is bound to the existance of the verify callable for this specific req station pair.
+}
+template<typename StationT> requires(sub::is_Station<StationT>)
+std::string_view sub::StationModel<StationT>::name() const {
+	return name(obj);
+}
+template<typename StationT> requires(sub::is_Station<StationT>)
+std::vector<std::string_view> sub::StationModel<StationT>::lines() const {
+	return lines(obj);
+}
+template<typename StationT> requires(sub::is_Station<StationT>)
+std::vector<std::unique_ptr<sub::Requirement>> sub::StationModel<StationT>::req() const {
+	return req(obj);
+}
+
+// Type erasure boilertplate: external polymorphism free functions
+template<sub::is_Req R>
+bool sub::tryFix(is_Station auto& s, const Requirement& r) { // TODO: VIRTUAL double dipatch of is_Station auto& s calls s.tryFix(*this); ()
+	return s.tryFix(dynamic_cast<R&>(r)); // NOTE: Double dispatch requires at least one concrete type, which is only possible on the external polymophism stage out of 4 stages of type erasure (Station -> pimpl -> ext polymorph of obj -> obj's specific behaviour)
+}
+template<sub::is_Req R>
+bool sub::verify(const is_Station auto& s, const Requirement& r) {
+	return s.tryFix(dynamic_cast<R&>(r)); // NOTE: Double dispatch requires at least one concrete type, which is only possible on the external polymophism stage out of 4 stages of type erasure (Station -> pimpl -> ext polymorph of obj -> obj's specific behaviour)
 }
