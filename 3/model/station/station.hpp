@@ -20,14 +20,6 @@ class Requirement;
 template<typename>
 class StationCRTP;
 
-/*template<typename sQM>
-concept is_Station = std::derived_from<sQM, StationCRTP<sQM>> && requires(const sQM& s) {
-	//{sQM(std::string{})} -> std::convertible_to
-	//<StationCRTP<sQM>>;
-	{s.name()} -> std::convertible_to<std::string_view>;
-	{s.lines()} -> std::convertible_to<std::vector<std::string_view>>;
-	{s.req()} -> std::convertible_to<std::vector<sub::Requirement>>;
-};*/
 }
 
 #include "../common/requirement/requirement.hpp"
@@ -157,15 +149,17 @@ template<is_Station S, is_Req R>
 struct FreeTryFixFunctor {
 	static const FreeTryFixFunctor& it;
 
-	bool operator()(S& s, const Requirement& r) const {return tryFix<S, R>(s, r);}
+	bool operator()(S& s, const Requirement& r) const {return FreeTryFixFunctor/*<S, R>*/::tryFix(s, r);}
 	static bool tryFix(S& s, const Requirement& r) {return it(s, r);}
 };
+//template<is_Station S, is_Req R>
+//bool FreeTryFixFunctor<S, R>::tryFix(S& s, const Requirement& r) {return FreeTryFixFunctor::it(s, r);}
 
 template<is_Station S, is_Req R>
 struct FreeVerifyFunctor {
 	static const FreeVerifyFunctor& it;
 
-	bool operator()(const S& s, const Requirement& r) const {return verify<S, R>(s, r);}
+	bool operator()(const S& s, const Requirement& r) const {return FreeVerifyFunctor/*<S, R>*/::verify(s, r);}
 	static bool verify(const S& s, const Requirement& r) {return it(s, r);}
 
 	FreeVerifyFunctor() = delete;

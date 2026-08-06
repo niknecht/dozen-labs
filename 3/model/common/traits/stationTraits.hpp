@@ -10,6 +10,7 @@ class Requirement;
 #include <concepts>
 #include <vector>
 #include <string_view>
+#include <memory>
 
 /*! Concept relying on is_Req concept demanding a lot of interaction, that defines what a station is.
  *
@@ -29,6 +30,6 @@ concept is_Station = std::derived_from
 	//<StationCRTP<sQM>>;
 	{s.name()} -> std::convertible_to<std::string_view>;
 	{s.lines()} -> std::convertible_to<std::vector<std::string_view>>;
-	{s.req()} -> std::convertible_to<std::vector<sub::Requirement>>;
+	{s.req()} -> std::convertible_to<std::vector<std::unique_ptr<sub::Requirement>>>;
 };
 }

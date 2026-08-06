@@ -9,8 +9,6 @@ class Requirement;
 
 #include <stdint.h>
 #include <string>
-#include <vector>
-#include <typeinfo>
 
 namespace sub {
 class Station;
@@ -25,7 +23,7 @@ namespace sub {
 
 enum class RequirementPriority : uint32_t {
 	ReqLinesExist,
-	ReqStationExistsNotOnLine
+	ReqStationsExistOnLines
 };
 
 /*! A class that exposes Requirement concrete type through type's hash at runtime. This is useful for dynamic registry lookup for multidispatch. */
@@ -56,11 +54,11 @@ enum class RequirementPriority : uint32_t {
  * Requirement sorting has to account for both priority and the source name. This is because, when processed in parallel, each thread has to get all the requirements on the same priority for one station.
  * Co-dependent requirements are prohiboted because they would violate the priority guarantee and therefore require special requirement classes. But this should not occur in a typical metro anyway.
  *
- * @see Double dispatch
+ * @see Multi-dispatch
  */
 class Requirement{
 private:
-	std::string source;
+	std::string source_;
 	virtual RequirementPriority priority() const = 0;
 public:
 	bool operator<(const Requirement& other) const noexcept; //!< Priority -> name comparion
@@ -75,10 +73,9 @@ public:
 	Requirement& operator=(const Requirement&) = default;
 	Requirement& operator=(Requirement&&) = default;
 	virtual ~Requirement() = default;
-//protected:
-	//virtual bool dispatchTryFix(StationConcept& s) const = 0; // {return s.tryFix(*this);} // TODO: override looks the same for all req
-	//virtual bool dispatchVerify(const StationConcept& s) const = 0; // {return s.tryFix(*this);} // TODO: override this with auto in templates for all req classes
+
 	virtual size_t type() const = 0; //!< Returns a type hash that can be used in dynamic dispatch to select the correct free function
+	std::string_view source() const noexcept;
 	//static_assert(is_Req<Requirement>);
 };
 

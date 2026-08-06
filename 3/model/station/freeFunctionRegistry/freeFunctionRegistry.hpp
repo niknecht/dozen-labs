@@ -42,15 +42,17 @@ public:
  * @see The hardest question in programming*/
 template<sub::is_Station LWord, sub::is_Req RWord>
 struct FreeFunctionRegistrar {
-	FreeFunctionRegistrar(FreeFunctionRegistry&, void*&); //!< Allows reusability without declaring seperate class for each registry
+	constexpr FreeFunctionRegistrar(FreeFunctionRegistry&, void*); //!< Allows reusability without declaring seperate class for each registry
 };
 
 }
 
 // ------------------------ Template definitions ---------------------------------
 
+#include <typeinfo>
+
 template<sub::is_Station LWord, sub::is_Req RWord>
-sub::FreeFunctionRegistrar<LWord, RWord>::FreeFunctionRegistrar(sub::FreeFunctionRegistry& reg, void*& f) //:registrar_{reg} 
+constexpr sub::FreeFunctionRegistrar<LWord, RWord>::FreeFunctionRegistrar(sub::FreeFunctionRegistry& reg, void* f) //:registrar_{reg} 
 {
 	reg.write({typeid(LWord).hash_code(), typeid(RWord).hash_code()}, f);
 	//static Registrar registrar_{reg, f};

@@ -1,10 +1,14 @@
 #include <utility>
+#include <exception>
 
 #include "stationCRTP.hpp"
 
 // CRTP boilerplate: Non polymorphic behaviour (base intialization)
 template<typename Station>
-sub::StationCRTP<Station>::StationCRTP(const std::string_view n) :m_name(n) {}
+sub::StationCRTP<Station>::StationCRTP(const std::string_view n) :m_name(n) {
+	if(n.empty())
+		throw std::invalid_argument("Bad station name.");
+}
 
 // CRTP boilerplate: Non polymorphics beahaviour
 template<typename Station>
