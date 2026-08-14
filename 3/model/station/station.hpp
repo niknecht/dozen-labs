@@ -147,20 +147,24 @@ public:
 /*! @see The hardest question in programming*/
 template<is_Station S, is_Req R>
 struct FreeTryFixFunctor {
-	static const FreeTryFixFunctor& it;
+	//static const FreeTryFixFunctor& it;
 
-	bool operator()(S& s, const Requirement& r) const {return FreeTryFixFunctor/*<S, R>*/::tryFix(s, r);}
-	static bool tryFix(S& s, const Requirement& r) {return it(s, r);}
+	// TODO Deal with this shit
+	//bool operator()(S& s, const Requirement& r) const {return s.tryFix(r);}//FreeTryFixFunctor/*<S, R>*/::tryFix(s, r);}
+	static bool tryFix(S& s, const Requirement& r) {return s.tryFix(r);}//return it(s, r);}
+	
+	FreeTryFixFunctor() = delete;
 };
 //template<is_Station S, is_Req R>
 //bool FreeTryFixFunctor<S, R>::tryFix(S& s, const Requirement& r) {return FreeTryFixFunctor::it(s, r);}
 
 template<is_Station S, is_Req R>
 struct FreeVerifyFunctor {
-	static const FreeVerifyFunctor& it;
+	//static const FreeVerifyFunctor& it;
 
-	bool operator()(const S& s, const Requirement& r) const {return FreeVerifyFunctor/*<S, R>*/::verify(s, r);}
-	static bool verify(const S& s, const Requirement& r) {return it(s, r);}
+	// TODO Deal with this shit
+	//bool operator()(const S& s, const Requirement& r) const {return s.verify(r);}//FreeVerifyFunctor/*<S, R>*/::verify(s, r);}
+	static bool verify(const S& s, const Requirement& r) {return s.verify(r);}//return it(s, r);}
 
 	FreeVerifyFunctor() = delete;
 };

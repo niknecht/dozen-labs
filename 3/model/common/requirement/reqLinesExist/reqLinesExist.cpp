@@ -32,6 +32,7 @@ std::vector<std::string_view> sub::ReqLinesExist::required_lines() const noexcep
 }
 
 // Interaction functions for this requirement with all kinds of stations
+// Keep these here, so that they exist in the main's translation block
 #include "../../../station/directStation/directStation.hpp"
 #include "../../../station/multiLineStation/multiLineStation.hpp"
 #include "../../../station/transitNodeStation/transitNodeStation.hpp"
@@ -44,7 +45,7 @@ namespace sub{
  *
  * The overhead of this should be near zero unless there's an exception.*/
 template<is_Station S>
-static void constexpr inline check_source_station_against_lines_exist(const ReqLinesExist& r, const S* it) noexcept(false) {
+static void constexpr inline check_source_station_against_lines_exist(const ReqLineExists& r, const S* it) noexcept(false) {
 	// Generic station checks
 	using namespace std::string_literals;
 	if (r.required_lines().empty()) [[unlikely]] // Speculative execution negates the overhead of all the checks.
@@ -61,7 +62,7 @@ static void constexpr inline check_source_station_against_lines_exist(const ReqL
 
 //template<>
 template<>
-bool sub::TryFixStationCallable<sub::DirectStation, sub::ReqLinesExist>::operator()(this sub::DirectStation* it, const sub::ReqLinesExist& r) {
+bool sub::TryFixStationCallable<sub::DirectStation, sub::ReqLineExists>::operator()(this sub::DirectStation* it, const sub::ReqLineExists& r) {
 	sub::check_source_station_against_lines_exist<std::remove_pointer_t<decltype(it)>>(r, it);
 	// TODO Check relevance, if not relevant -- throw
 	// TODO If relevant, return falsea
@@ -70,7 +71,7 @@ bool sub::TryFixStationCallable<sub::DirectStation, sub::ReqLinesExist>::operato
 	return false;
 }
 template<>
-bool sub::TryFixStationCallable<sub::MultiLineStation, sub::ReqLinesExist>::operator()(this sub::MultiLineStation* it, const sub::ReqLinesExist& r) {
+bool sub::TryFixStationCallable<sub::MultiLineStation, sub::ReqLineExists>::operator()(this sub::MultiLineStation* it, const sub::ReqLineExists& r) {
 	using namespace std::string_literals;
 	sub::check_source_station_against_lines_exist<std::remove_pointer_t<decltype(it)>>(r, it);
 
@@ -78,7 +79,7 @@ bool sub::TryFixStationCallable<sub::MultiLineStation, sub::ReqLinesExist>::oper
 	return false;
 }
 template<>
-bool sub::TryFixStationCallable<sub::TransitNodeStation, sub::ReqLinesExist>::operator()(this sub::TransitNodeStation* it, const sub::ReqLinesExist& r) noexcept(false) {
+bool sub::TryFixStationCallable<sub::TransitNodeStation, sub::ReqLineExists>::operator()(this sub::TransitNodeStation* it, const sub::ReqLineExists& r) noexcept(false) {
 	sub::check_source_station_against_lines_exist<std::remove_pointer_t<decltype(it)>>(r, it);
 	throw(std::invalid_argument("Warning: TransitNodeStation should not emmit ReqLinesExist: use sub::ReqStationsExistOnLines."));
 
@@ -90,27 +91,27 @@ bool sub::TryFixStationCallable<sub::TransitNodeStation, sub::ReqLinesExist>::op
 		auto iter = std::ranges::find(it->transfers(), l,
 				[](const std::pair<std::string_view, std::string_view> p) constexpr noexcept {return p.first;}); // std::get<0> doesn't work for some reason
 		if(iter != std::ranges::end(it->transfers())) [[likely]]
-			it->remove_transfer(iter);
+			it->remove_transfer(iter->second);
 	}
 	return true;
 }
 
 template<>
-bool sub::VerifyStationCallable<sub::DirectStation, sub::ReqLinesExist>::operator()(this const sub::DirectStation* const it, const ReqLinesExist& r) {
+bool sub::VerifyStationCallable<sub::DirectStation, sub::ReqLineExists>::operator()(this const sub::DirectStation* const it, const ReqLineExists& r) {
 	using namespace std::string_literals;
 	throw std::invalid_argument("Run-time error: Requirement of type 'lines exist' from "s + std::string(r.source()) + " is not directed to "s + std::string(it->name())\
-			+ " (DirectStation). Note: Requirements of 'type lines' exist don't have a recipient, they must be handled by the Subway class itself."s);
+			+ " (DirectStation). Note: Requirements of type 'lines exist' don't have a recipient, they must be handled by the Subway class itself."s);
 	return true;
 }
 template<>
-bool sub::VerifyStationCallable<sub::MultiLineStation, sub::ReqLinesExist>::operator()(this const sub::MultiLineStation* const it, const ReqLinesExist& r) {
+bool sub::VerifyStationCallable<sub::MultiLineStation, sub::ReqLineExists>::operator()(this const sub::MultiLineStation* const it, const ReqLineExists& r) {
 	using namespace std::string_literals;
 	throw std::invalid_argument("Run-time error: Requirement of type 'lines exist' from "s + std::string(r.source()) + " is not directed to "s + std::string(it->name())\
-			+ " (multi-line station). Note: Requirements of 'type lines' exist don't have a recipient, they must be handled by the Subway class itself."s);
+			+ " (multi-line station). Note: Requirements of type 'lines exist' don't have a recipient, they must be handled by the Subway class itself."s);
 	return true;
 }
 template<>
-bool sub::VerifyStationCallable<sub::TransitNodeStation, sub::ReqLinesExist>::operator()(this const sub::TransitNodeStation* const it, const ReqLinesExist& r) {
+bool sub::VerifyStationCallable<sub::TransitNodeStation, sub::ReqLineExists>::operator()(this const sub::TransitNodeStation* const it, const ReqLineExists& r) {
 	using namespace std::string_literals;
 	throw std::invalid_argument("Run-time error: Requirement of type 'lines exist' from "s + std::string(r.source()) + " is not directed to "s + std::string(it->name())\
 			+ ". Note: Requirements of type 'lines exist' don't have a recipient, they must be handled by the Subway class itself."s);
