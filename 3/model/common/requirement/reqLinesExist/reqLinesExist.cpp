@@ -4,31 +4,32 @@
 #include <vector>
 #include <stdexcept>
 
-sub::ReqLinesExist::ReqLinesExist(const std::string_view src, const std::vector<std::string_view>& lines) : Requirement{src}, requiredLines{lines.begin(), lines.end()}
+sub::ReqLineExists::ReqLineExists(const std::string_view src, const std::string_view line) : Requirement{src}, requiredLine{line}
 {
 	using namespace std::string_literals;
-	if(lines.empty()) [[unlikely]]{
+	// TODO Move these to the req() func of each station
+	/*if(lines.empty()) [[unlikely]]{
 		throw std::invalid_argument("Run-time error: Empty line exist requirement emmited by "s + std::string(src) + ".");
 	}
 	else if (lines.size() > 3) [[unlikely]]{
 		throw std::invalid_argument("Run-time error: Empty line exist requirement emmited by "s + std::string(src) + ".");
-	}
+	}*/
 
-	for (const auto& it : lines)
-		if (it.empty()) [[unlikely]]
+	//for (const auto& it : lines)
+		if (line.empty()) [[unlikely]]
 			throw std::out_of_range("Run-time error: "s + std::string(src) + " emmitted bad requirement: empty line names are not allowed."s);
 }
 
-size_t sub::ReqLinesExist::type() const noexcept{
-	return typeid(ReqLinesExist).hash_code();
+size_t sub::ReqLineExists::type() const noexcept{
+	return typeid(ReqLineExists).hash_code();
 }
 
-sub::RequirementPriority sub::ReqLinesExist::priority() const noexcept {
+sub::RequirementPriority sub::ReqLineExists::priority() const noexcept {
 	return sub::RequirementPriority::ReqLinesExist;
 }
 
-std::vector<std::string_view> sub::ReqLinesExist::required_lines() const noexcept {
-	return {requiredLines.begin(), requiredLines.end()};
+std::vector<std::string_view> sub::ReqLineExists::required_lines() const noexcept {
+	return {requiredLine};
 }
 
 // Interaction functions for this requirement with all kinds of stations
@@ -115,5 +116,13 @@ bool sub::VerifyStationCallable<sub::TransitNodeStation, sub::ReqLineExists>::op
 	using namespace std::string_literals;
 	throw std::invalid_argument("Run-time error: Requirement of type 'lines exist' from "s + std::string(r.source()) + " is not directed to "s + std::string(it->name())\
 			+ ". Note: Requirements of type 'lines exist' don't have a recipient, they must be handled by the Subway class itself."s);
+	return true;
+}
+
+/* Ritual itself implies the letting of blood. Rituals that fail in this requirement are but mock rituals.*/
+bool sub::ReqLineExists::test(const Subway& ss) const {
+	for (const auto it : this->required_lines())
+		if (!ss.is_allowed_line(it))
+			return false;
 	return true;
 }

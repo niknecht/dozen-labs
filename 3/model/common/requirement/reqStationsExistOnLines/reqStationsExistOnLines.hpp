@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../requirement.hpp"
+#include "../../../subway/subway.hpp"
 
 #include <vector>
 
@@ -12,10 +13,12 @@ private:
 public:
 	const std::pair<std::string_view, std::string_view> transfer;
 
-	size_t type() const noexcept;
-	sub::RequirementPriority priority() const noexcept;
+	size_t type() const noexcept override;
+	sub::RequirementPriority priority() const noexcept override;
 
 	ReqStationExistsOnLine(std::string_view src, std::pair<std::string_view, std::string_view>);
+
+	bool test(const Subway&) const override;
 
 	//decltype(auto) begin() const noexcept {return transits.begin();}
 	//decltype(auto) end() const noexcept {return transits.end();}
@@ -37,5 +40,5 @@ bool sub::TryFixStationCallable<sub::MultiLineStation, sub::ReqStationExistsOnLi
 template<>
 bool sub::TryFixStationCallable<sub::TransitNodeStation, sub::ReqStationExistsOnLine>::operator()(this sub::TransitNodeStation* it, const sub::ReqStationExistsOnLine& r);
 
-template<>
-bool sub::Subway::test(const ReqStationExistsOnLine&) const;
+//template<>
+//bool sub::Subway::test(const ReqStationExistsOnLine&) const;

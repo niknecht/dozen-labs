@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../stationCRTP.hpp"
 
 namespace sub{

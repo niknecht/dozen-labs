@@ -98,3 +98,6 @@ bool sub::VerifyStationCallable<sub::TransitNodeStation, sub::ReqStationExistsOn
 	else return false;
 }
 
+bool sub::ReqStationExistsOnLine::test(const Subway& ss) const {
+	return ss.findStation_byLineNamePair({this->transfer.first, this->transfer.second}).has_value();
+}

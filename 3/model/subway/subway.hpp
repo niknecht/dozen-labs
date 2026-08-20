@@ -2,10 +2,13 @@
 
 #include "../station/station.hpp"
 #include"../common/traits/requirementTraits.hpp"
+#include "../line/line.hpp"
 
 #include <memory>
 #include <string>
 #include <type_traits>
+#include<unordered_set>
+#include <optional>
 //#include <atomic>
 
 namespace sub {
@@ -17,31 +20,46 @@ namespace sub {
 class Subway {
 private:
 	std::unordered_map<std::string, std::unique_ptr<Station>> name_map;
-	std::unordered_map<Station*, std::pair<std::string, std::string>> line_name_cache;
-	std::unordered_map<Station*, std::pair<std::string, std::string>> transfer_name_cache;
+	std::unordered_map<std::pair<std::string, std::string>, Station*> line_name_cache;
+	std::unordered_map<std::pair<std::string, std::string>, Station*> transfer_name_cache;
+
+	class LineHash {
+	public:
+		size_t operator()(const Line& l) {return std::hash<std::string_view>()(l.name());}
+	};
+	std::unordered_set<sub::Line, LineHash> lines;
 
 	std::vector<std::string_view> listDelete;// TODO Check of the views are valid
 	std::vector<std::string_view> listTryFix;
 	
 	void do_delete() noexcept;
 
-	std::vector<std::unique_ptr<Requirement>> verify() const noexcept;
+	//bool do_test(const is_Req auto&) const;
 
-	bool test(const is_Req auto&) const;
+	std::vector<std::unique_ptr<Requirement>> verify() const noexcept;
 
 	void tryFix() noexcept;
 public:
-	/*! Flexible station addition without performance penalties.*/
+	void add_line(auto&&... args)
+		requires(std::is_constructible_v<Line, decltype(args)...>) {
+		lines.insert(Line{std::forward(args)...});
+	}
+
+	bool is_allowed_line(const std::string_view) const noexcept;
+
+	/*! Flexible station addition without performance penalties.
+	 *
+	 * NOTE: Each station's ctor is supposed to take name string as the first argument.*/
 	template<typename RawT_Station>
 	void addStation(std::string_view name, auto&&... args) noexcept
 		requires(std::is_constructible_v<RawT_Station, decltype(name), std::remove_reference_t<decltype(args)>...>) {
-		try {
 		if(name_map.find(std::string(name)) == name_map.end())
-			name_map[name, std::make_unique<RawT_Station>(name, args...)];
-		}
-		catch(...) { //TODO
-		}
+			name_map[name, std::make_unique<RawT_Station>(name, std::forward(args)...)];
 	} // Perfect forward a Station (unique_ptr?) here
+	
+	std::optional<std::add_const_t<decltype(name_map.begin())>> findStation_byName(const std::string_view) const;
+
+	std::optional<std::add_const_t<decltype(name_map.begin())>> findStation_byLineNamePair(const std::pair<std::string_view, std::string_view>) const;
 };
 
 

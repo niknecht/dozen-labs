@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../common/traits/requirementTraits.hpp"
+#include "../../subway/subway.hpp"
 
 namespace sub{
 //template<typename>
@@ -76,6 +77,8 @@ public:
 
 	virtual size_t type() const = 0; //!< Returns a type hash that can be used in dynamic dispatch to select the correct free function
 	std::string_view source() const noexcept;
+
+	virtual bool test(const Subway&) const = 0;
 	//static_assert(is_Req<Requirement>);
 };
 

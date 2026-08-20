@@ -7,7 +7,7 @@ std::vector<std::string_view> sub::DirectStation::lines() const {
 
 std::vector<std::unique_ptr<sub::Requirement>> sub::DirectStation::req() const {
 	std::vector<std::unique_ptr<sub::Requirement>> req(1zu);
-	req.push_back(std::make_unique<sub::ReqLinesExist>(this->name(), std::vector<std::string_view>{line}));
+	req.push_back(std::make_unique<sub::ReqLineExists>(this->name(), line));
 	return req;
 }
 

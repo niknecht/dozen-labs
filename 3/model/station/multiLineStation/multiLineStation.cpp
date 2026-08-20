@@ -10,7 +10,8 @@ sub::MultiLineStation::MultiLineStation(const std::string_view n, const std::vec
 
 std::vector<std::unique_ptr<sub::Requirement>> sub::MultiLineStation::req() const {
 	std::vector<std::unique_ptr<sub::Requirement>> req;
-	req.push_back(std::make_unique<sub::ReqLinesExist>(this->name, std::vector<std::string_view>(lines_.begin(), lines_.end())));
+	for(const auto& l : this->lines())
+		req.push_back(std::make_unique<sub::ReqLineExists>(this->name(), l));
 	return req;
 }
 
