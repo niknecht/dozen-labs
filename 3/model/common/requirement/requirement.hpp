@@ -21,10 +21,12 @@ class StationCRTP;
 
 namespace sub {
 
-
+// !< Applies an optimization if a requirement is MutableStateStable. Otherwise optional.
 enum class RequirementPriority : uint32_t {
-	ReqLinesExist,
-	ReqStationsExistOnLines
+	MutableStateStable,
+	MutableStateVolotile
+		//,
+	//Unspecicfied
 };
 
 /*! A class that exposes Requirement concrete type through type's hash at runtime. This is useful for dynamic registry lookup for multidispatch. */
@@ -60,7 +62,6 @@ enum class RequirementPriority : uint32_t {
 class Requirement{
 private:
 	std::string source_;
-	virtual RequirementPriority priority() const = 0;
 public:
 	bool operator<(const Requirement& other) const noexcept; //!< Priority -> name comparion
 	bool operator==(const Requirement& other) const noexcept; //!< Priority -> name comparison
@@ -75,10 +76,11 @@ public:
 	Requirement& operator=(Requirement&&) = default;
 	virtual ~Requirement() = default;
 
+	virtual RequirementPriority priority() const = 0;
 	virtual size_t type() const = 0; //!< Returns a type hash that can be used in dynamic dispatch to select the correct free function
 	std::string_view source() const noexcept;
 
-	virtual bool test(const Subway&) const = 0;
+	virtual bool test(const sub::Subway&) const = 0;
 	//static_assert(is_Req<Requirement>);
 };
 

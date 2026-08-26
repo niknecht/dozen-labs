@@ -9,7 +9,7 @@
 #include <type_traits>
 #include<unordered_set>
 #include <optional>
-//#include <atomic>
+#include <atomic>
 
 namespace sub {
 /*! @brief This is a Repository pattern class that stores Stations, searches and verifies them.
@@ -32,13 +32,18 @@ private:
 	std::vector<std::string_view> listDelete;// TODO Check of the views are valid
 	std::vector<std::string_view> listTryFix;
 	
-	void do_delete() noexcept;
+	//void do_delete() noexcept;
 
-	//bool do_test(const is_Req auto&) const;
+	// do_test(const is_Req auto&) const;
 
-	std::vector<std::unique_ptr<Requirement>> verify() const noexcept;
+#ifdef THRS
+	//!< This returns true if there have been deletions, and false if there haven't. If this returns false, that means the current model is valid.
+	std::atomic_flag verify() noexcept;
+#else
+	bool verify() noexcept;
+#endif
 
-	void tryFix() noexcept;
+	//void tryFix(std::vector<std::unique_ptr<Requirement>>) noexcept;
 public:
 	void add_line(auto&&... args)
 		requires(std::is_constructible_v<Line, decltype(args)...>) {
