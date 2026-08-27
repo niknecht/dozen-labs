@@ -53,12 +53,14 @@ enum class RequirementPriority : uint32_t {
  * @see External polymorphism pattern*/
 struct FutureRequirementConcept {
 	//!< NOTE: that this can and will throw as it accesses the future, for example, if there's been thrown an exception during underlying Requirement's construction, the excpetion will come out of this interface
-	virtual RequirementPriority priority() const noexcept(false) = 0;
+	virtual RequirementPriority priority() const noexcept(false) = 0; // TODO Remove this so it doesn't confuse the user, this is practically never useful because accesses the future with little room to swap that future out
 	//!< NOTE: that this can and will throw as it accesses the future, for example, if there's been thrown an exception during underlying Requirement's construction, the excpetion will come out of this interface
-	virtual bool test(const Subway&) const noexcept(false) = 0;
-	virtual std::string_view source() const noexcept(false) = 0;
+	virtual bool test(const Subway&) const noexcept(false) = 0; // TODO Remove this - same, very error prone, not how this wrapper should be used
+	virtual std::string_view source() const noexcept(false) = 0; // TODO Remove this
 
-	virtual void swap(std::unique_ptr<std::future<Requirement>> nf) noexcept = 0;
+	virtual std::unique_ptr<Requirement> get() noexcept(false);
+
+	virtual void swap(std::future<Requirement>&& nf) noexcept = 0;
 	//!< This is trivial
 	virtual ~FutureRequirementConcept() = default;
 
@@ -72,11 +74,13 @@ private:
  * These classes expose common interface and hence can easily be type erased with no boilerplate on the user's side.*/
 template <is_Req TRequirement>
 struct FutureRequirementModel : public FutureRequirementConcept{
-	RequirementPriority priority() const noexcept(false) override;
-	bool test(const Subway&) const noexcept(false) override;
-	std::string_view source() const noexcept(false) override;
+	RequirementPriority priority() const noexcept(false) override; // TODO Remove this so that it doesn't confuse the user
+	bool test(const Subway&) const noexcept(false) override; // TODO Remove this
+	std::string_view source() const noexcept(false) override; // TODO Remove this
 
-	void swap(std::unique_ptr<std::future<Requirement>> nf) noexcept override {return std::swap(nf, pimpl_);};
+	void swap(std::future<Requirement>&& nf) noexcept override {return std::swap(nf, *pimpl_);};
+
+	std::unique_ptr<Requirement> get() noexcept(false) override;
 
 	//!< @see Bridge pattern
 	FutureRequirementModel(std::future<TRequirement>&&);
