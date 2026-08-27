@@ -38,7 +38,7 @@ private:
 
 #ifdef THRS
 	//!< This returns true if there have been deletions, and false if there haven't. If this returns false, that means the current model is valid.
-	std::atomic_flag verify() noexcept;
+	bool remedy() noexcept(false);
 #else
 	bool verify() noexcept;
 #endif
