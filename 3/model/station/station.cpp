@@ -4,7 +4,7 @@
 #include <utility>
 
 // Type erasure boilertplate: external polymorphism free functions
-std::vector<std::unique_ptr<sub::Requirement>> sub::req(const is_Station auto& s) {
+sub::station_req_fn_ret_t sub::req(const is_Station auto& s) {
 	return s.req();
 }
 std::string_view sub::name(const is_Station auto& s) {
@@ -39,7 +39,7 @@ bool sub::Station::tryFix(const Requirement& r) {
 bool sub::Station::verify(const Requirement& r) const {
 	return pimpl->verify(r);
 }
-std::vector<std::unique_ptr<sub::Requirement>> sub::Station::req() const {
+sub::station_req_fn_ret_t sub::Station::req() const {
 	return pimpl->req();
 }
 

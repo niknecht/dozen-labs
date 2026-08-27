@@ -12,7 +12,7 @@ private:
 	std::vector<std::pair<std::string, std::string>> transfers_;
 public:
 	std::vector<std::string_view> lines() const noexcept;
-	std::vector<std::unique_ptr<sub::Requirement>> req() const;
+	sub::station_req_fn_ret_t req() const;
 	std::vector<std::pair<std::string_view, std::string_view>> transfers() const noexcept;
 	void remove_transfer(const std::string_view name) noexcept;
 

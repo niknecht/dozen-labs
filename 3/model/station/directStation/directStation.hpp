@@ -9,8 +9,7 @@ private:
 	std::string line;
 public:
 	std::vector<std::string_view> lines() const;
-	std::vector<std::unique_ptr<Requirement>> req() const;
-
+	sub::station_req_fn_ret_t req() const;
 	explicit DirectStation(const std::string_view name, const std::string_view lines);
 };
 

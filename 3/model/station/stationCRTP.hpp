@@ -39,7 +39,7 @@ class StationCRTP {
 public:
 	std::string_view name() const noexcept; //!< Non-polymorphic behaviour, doesn't dispatch to the derived
 	std::vector<std::string_view> lines() const noexcept; //!< Polymorphic lines() getter. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the derivees.
-	std::vector<std::unique_ptr<sub::Requirement>> req() const; //!< Polymorphic request to get a list of requirements from this station to the rest of the stations and the subway itself. Defining the actual dispatch-to method is resposibility of the station derivitees.
+	sub::station_req_fn_ret_t req() const noexcept; //!< Polymorphic request to get a list of requirements from this station to the rest of the stations and the subway itself. Defining the actual dispatch-to method is resposibility of the station derivitees.
 	//bool tryFix(const is_Req auto&); //!< Polymorphic tryFix method. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the requirements.
 	//bool verify(const is_Req auto&) const; //!< Polymorphic verify method. Defined automatically for every base. Defining dispatch-to method is the reqponsibility of the requirements.
 	template<is_Req R>
@@ -100,7 +100,7 @@ std::vector<std::string_view> sub::StationCRTP<Station>::lines() const noexcept 
 	return static_cast<const Station*>(this)->lines();
 }// NOTE: Defining actual lines() implementation is responsibility of each derivee.
 template<typename Station>
-std::vector<std::unique_ptr<sub::Requirement>> sub::StationCRTP<Station>::req() const {
+sub::station_req_fn_ret_t sub::StationCRTP<Station>::req() const noexcept{
 	return static_cast<const Station*>(this)->req();
 } // NOTE: Defining the actual req() implementation is responsibility of each derivee.
 /*template<typename Station>

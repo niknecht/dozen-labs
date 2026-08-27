@@ -1,16 +1,21 @@
 #pragma once
 
+#define THRS // WARNING: Remove this once done eveloping multithread
+
 namespace sub{
 template<typename>
 class StationCRTP;
 
 class Requirement;
+struct FutureRequirementConcept;
 }
 
 #include <concepts>
 #include <vector>
 #include <string_view>
 #include <memory>
+#include <future>
+
 
 /*! Concept relying on is_Req concept demanding a lot of interaction, that defines what a station is.
  *
@@ -23,6 +28,13 @@ class Requirement;
  *
  * @see is_Req concept */
 namespace sub {
+
+#ifdef THRS
+using station_req_fn_ret_t = std::vector<std::unique_ptr<sub::FutureRequirementConcept>>;
+#else
+using station_req_fn_ret_t = std::vector<std::unique_ptr<Requirement>>;
+#endif
+
 template<typename sQM>
 concept is_Station = std::derived_from
 <sQM, StationCRTP<sQM>> && requires(const sQM& s) {
@@ -30,6 +42,6 @@ concept is_Station = std::derived_from
 	//<StationCRTP<sQM>>;
 	{s.name()} -> std::convertible_to<std::string_view>;
 	{s.lines()} -> std::convertible_to<std::vector<std::string_view>>;
-	{s.req()} -> std::convertible_to<std::vector<std::unique_ptr<sub::Requirement>>>;
+	{s.req()} -> std::convertible_to<station_req_fn_ret_t>;
 };
 }

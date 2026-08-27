@@ -78,6 +78,7 @@ public:
 	*  happen after because dispatch functions themselves must be virtual and therefore cannot
 	*  be defined for all specific stations at once. Not having these very simple, declared automatically
 	*  with correctness-of-definitions and safety guaranteed by concepts, would involve type erasing
+	*  with correctness-of-definitions and safety guaranteed by concepts, would involve type erasing
 	*  Requirements, which is a lot more error-prone. For this reason double dispatch must involve calling 
 	*  the concrete method specification on obj deirectly, but Station concept doesn't have obj, and if it did,
 	*  it would've been a template, meaning the function calling it, which is a virtual function would've had to
@@ -105,7 +106,7 @@ private:
 
 	friend std::string_view name(const is_Station auto& s); // @see External polymorphism
 	friend std::vector<std::string_view> lines(const is_Station auto& s); //@see External polymorphism
-	friend std::vector<std::unique_ptr<sub::Requirement>> req(const is_Station auto& s);
+	friend sub::station_req_fn_ret_t req(const is_Station auto& s);
 public:
 	template<is_Req R>
 	friend bool tryFix(is_Station auto& s, const Requirement&); //!< @see External polymorphism
@@ -123,7 +124,7 @@ public:
 
 	std::string_view name() const; //!< Unfortunately, by definition of what type erasure is, this has to also be implemented like all other methods.
 	std::vector<std::string_view> lines() const; //!< This could be just virtual, but tryFix and verify could not.
-	std::vector<std::unique_ptr<sub::Requirement>> req() const;
+	sub::station_req_fn_ret_t req() const;
 
 	/*! Public interfaces to externally polymorphic type erased classes
 	 *
@@ -170,7 +171,6 @@ struct FreeVerifyFunctor {
 };
 
 }
-
 // ---------------------------- Template defintions --------------------------------------------------
 
 namespace sub {
