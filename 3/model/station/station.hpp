@@ -53,7 +53,7 @@ public:
 
 	virtual std::string_view name() const = 0; //!< Getters are essential in the type erasure approach, else type would not be really erased
 	virtual std::vector<std::string_view> lines() const = 0; //!< Getters are essential in the type erasure approach, else type would not be really erased
-	virtual std::vector<std::unique_ptr<sub::Requirement>> req() const = 0; //!< inteface to the underlying Station class' req method
+	virtual /*std::vector<std::unique_ptr<sub::Requirement>>*/ sub::station_req_fn_ret_t req() const = 0; //!< inteface to the underlying Station class' req method
 	virtual bool tryFix(const sub::Requirement&) = 0;	//!< @see double dispatch
 	virtual bool verify(const sub::Requirement&) const = 0; //!< @see double dispatch
 	virtual std::unique_ptr<StationConcept> clone() const = 0; //!< @see Prototype
@@ -67,7 +67,7 @@ public:
 
 	std::string_view name() const override; //!< Getters are essential in the type erasure approach, else type would not be really erased. Because of nature of the Concept class in type erasure pattern, unfortunately, this has to be virtual.
 	std::vector<std::string_view> lines() const override; //!< Getters are essential in the type erasure approach, else type would not be really erased
-	std::vector<std::unique_ptr<sub::Requirement>> req() const override; //!< This returns a moved list of requirements to the subway system
+	/*std::vector<std::unique_ptr<sub::Requirement>>*/ sub::station_req_fn_ret_t req() const override; //!< This returns a moved list of requirements to the subway system
 	bool tryFix(const sub::Requirement& it) override; //!< @see double dispatch
 	bool verify(const sub::Requirement& it) const override; //!< @see double dispatch
 	std::unique_ptr<StationConcept> clone() const override; //!< @see Prototype
@@ -104,9 +104,9 @@ private:
 	template<typename StationT>
 	StationT clone(); //!< @see Prototype
 
-	friend std::string_view name(const is_Station auto& s); // @see External polymorphism
-	friend std::vector<std::string_view> lines(const is_Station auto& s); //@see External polymorphism
-	friend sub::station_req_fn_ret_t req(const is_Station auto& s);
+	friend std::string_view name(const is_Station auto& s) {return s.name();}; // @see External polymorphism
+	friend std::vector<std::string_view> lines(const is_Station auto& s) {return s.lines();}; //@see External polymorphism
+	friend sub::station_req_fn_ret_t req(const is_Station auto& s) {return s.req();}
 public:
 	template<is_Req R>
 	friend bool tryFix(is_Station auto& s, const Requirement&); //!< @see External polymorphism
@@ -215,7 +215,7 @@ std::vector<std::string_view> sub::StationModel<StationT>::lines() const {
 	return lines(obj);
 }
 template<typename StationT> requires(sub::is_Station<StationT>)
-std::vector<std::unique_ptr<sub::Requirement>> sub::StationModel<StationT>::req() const {
+sub::station_req_fn_ret_t sub::StationModel<StationT>::req() const {
 	return req(obj);
 }
 

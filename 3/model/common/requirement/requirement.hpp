@@ -6,6 +6,7 @@
 namespace sub{
 //template<typename>
 class Requirement;
+class Subway;
 }
 
 #include <stdint.h>
@@ -55,9 +56,9 @@ struct FutureRequirementConcept {
 	virtual std::unique_ptr<Requirement> get() noexcept(false);
 
 	virtual void swap(std::future<Requirement>&& nf) noexcept = 0;
+
 	//!< This is trivial
 	virtual ~FutureRequirementConcept() = default;
-
 private:
 	virtual std::unique_ptr<FutureRequirementConcept> clone() const;
 };
@@ -68,9 +69,9 @@ private:
  * These classes expose common interface and hence can easily be type erased with no boilerplate on the user's side.*/
 template <is_Req TRequirement>
 struct FutureRequirementModel : public FutureRequirementConcept{
-	void swap(std::future<Requirement>&& nf) noexcept override {return std::swap(nf, *pimpl_);};
-
 	std::unique_ptr<Requirement> get() noexcept(false) override;
+
+	void swap(std::future<Requirement>&& nf) noexcept override {return std::swap(nf, *pimpl_);};
 
 	//!< @see Bridge pattern
 	FutureRequirementModel(std::future<TRequirement>&&);
