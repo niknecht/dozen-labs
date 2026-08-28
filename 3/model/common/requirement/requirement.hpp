@@ -74,9 +74,9 @@ struct FutureRequirementModel : public FutureRequirementConcept{
 	void swap(std::future<Requirement>&& nf) noexcept override {return std::swap(nf, *pimpl_);};
 
 	//!< @see Bridge pattern
-	FutureRequirementModel(std::future<TRequirement>&&);
+	FutureRequirementModel(std::future<TRequirement>&& fr) :pimpl_{std::make_unique(fr)} {}
 	FutureRequirementModel(const FutureRequirementModel&) = default;
-	FutureRequirementModel(FutureRequirementModel&&) noexcept;
+	FutureRequirementModel(FutureRequirementModel&&) = default;
 private:
 	//!< @see Prototype pattern
 	std::unique_ptr<FutureRequirementConcept> clone() const override;
@@ -110,8 +110,8 @@ public:
 	Requirement& operator=(Requirement&&) = default;
 	virtual ~Requirement() = default;
 
-	virtual RequirementPriority priority() const = 0; //!< Proprities are an optional optimization mechanism to guarantee validity in fewer cycles. @see RequriementPriority
-	virtual size_t type() const = 0; //!< Returns a type hash that can be used in dynamic dispatch to select the correct free function
+	virtual RequirementPriority priority() const noexcept = 0; //!< Proprities are an optional optimization mechanism to guarantee validity in fewer cycles. @see RequriementPriority
+	virtual size_t type() const noexcept = 0; //!< Returns a type hash that can be used in dynamic dispatch to select the correct free function
 	std::string_view source() const noexcept;
 
 	virtual bool test(const sub::Subway&) const = 0;

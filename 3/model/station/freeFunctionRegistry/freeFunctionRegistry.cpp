@@ -14,14 +14,3 @@ void sub::FreeFunctionRegistry::write(Key const addr, Val const val) {
 const sub::FreeFunctionRegistry::Val& sub::FreeFunctionRegistry::read(Key const addr) {
 	return registry.find(addr)->second; // Check for nullptr
 }
-
-template<sub::is_Station LWord, sub::is_Req RWord>
-sub::FreeFunctionRegistrar<LWord, RWord>::FreeFunctionRegistrar(sub::FreeFunctionRegistry& reg, void*& f) //:registrar_{reg} 
-{
-	reg.write({typeid(LWord).hash_code(), typeid(RWord).hash_code()}, f);
-	//static Registrar registrar_{reg, f};
-}
-
-//template<sub::is_Station LWord, sub::is_Req RWord>
-//sub::FreeFunctionRegistrar<LWord, RWord>::FreeFunctionRegistrar::Registrar::Registrar(sub::FreeFunctionRegistry& reg, void*& f) {
-//}

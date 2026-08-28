@@ -1,6 +1,6 @@
 #pragma once
 
-#define THRS // WARNING: Remove this once done eveloping multithread
+//#define THRS // WARNING: Remove this once done eveloping multithread
 
 namespace sub{
 template<typename>

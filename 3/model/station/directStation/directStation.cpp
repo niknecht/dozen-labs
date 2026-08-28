@@ -3,7 +3,7 @@
 #include "../../common/traits/stationTraits.hpp"
 
 std::vector<std::string_view> sub::DirectStation::lines() const {
-	return {line};
+	return {line_};
 }
 
 sub::station_req_fn_ret_t sub::DirectStation::req() const {
@@ -11,9 +11,10 @@ sub::station_req_fn_ret_t sub::DirectStation::req() const {
 	req.push_back(
 #ifdef THRS
 		std::make_unique<FutureRequirementModel<ReqLineExists>>(std::async(std::launch::async, [this](){
-			return 
+			return sub::ReqLineExists(this->name(), line) 
+#else
+				std::make_unique<sub::ReqLineExists>(this->name(), line_)
 #endif
-				sub::ReqLineExists(this->name(), line) 
 #ifdef THRS
 		;}))
 #endif
@@ -21,5 +22,5 @@ sub::station_req_fn_ret_t sub::DirectStation::req() const {
 	return req;
 }
 
-sub::DirectStation::DirectStation(const std::string_view name, const std::string_view lines) : sub::StationCRTP<DirectStation>{name}, line{lines} 
+sub::DirectStation::DirectStation(const std::string_view name, const std::string_view line) : sub::StationCRTP<DirectStation>{name}, line_{line} 
 {}

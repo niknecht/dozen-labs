@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <unordered_map>
+#include <typeindex>
 
 #include "../../common/traits/stationTraits.hpp"
 #include "../../common/traits/requirementTraits.hpp"
@@ -27,8 +28,8 @@ class FreeFunctionRegistry {
 private:
 	std::unordered_map<Key, Val, pair_hash> registry;
 public:
-	void write(Key const addr, Val const cont);
-	const Val& read(Key const addr);
+	void write(Key const addr, Val const cont); //!< No safeguards because (a) this is all done automatically through types, and (b) the map will catch duplicates
+	const Val& read(Key const addr); //!< No safeguards because everything is done automatically
 };
 
 /*! Helper class who's ctor binds a function to a register. Each callable in the station's interace is
@@ -42,7 +43,7 @@ public:
  * @see The hardest question in programming*/
 template<sub::is_Station LWord, sub::is_Req RWord>
 struct FreeFunctionRegistrar {
-	constexpr FreeFunctionRegistrar(FreeFunctionRegistry&, void*); //!< Allows reusability without declaring seperate class for each registry
+	constexpr FreeFunctionRegistrar(FreeFunctionRegistry& reg, void* fun);//!< Allows reusability without declaring seperate class for each registry
 };
 
 }

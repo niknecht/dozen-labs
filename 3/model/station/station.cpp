@@ -3,16 +3,6 @@
 
 #include <utility>
 
-// Type erasure boilertplate: external polymorphism free functions
-sub::station_req_fn_ret_t sub::req(const is_Station auto& s) {
-	return s.req();
-}
-std::string_view sub::name(const is_Station auto& s) {
-	return s.name();
-}
-std::vector<std::string_view> sub::lines(const is_Station auto& s) {
-	return s.lines();
-}
 
 // Note: the two classes above generate all nessesaty specializations for all the external polymorphism related
 // boilerplate in the app. No further specialization is required on the behalf of station clases nor requirement classes.

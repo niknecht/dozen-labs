@@ -58,7 +58,7 @@ class TryFixStationCallable {
 private:
 	static constexpr const FreeTryFixFunctor<S, R> func {func};
 	//! (i) Constexpr everything (ii) blame Sam Hyde
-	static constexpr const FreeFunctionRegistrar<S, R> register_{registry_tryFix, reinterpret_cast<void*>(&func.tryFix)}; //TODO Only registered of not registered already.
+	static constexpr const FreeFunctionRegistrar<S, R> register_{registry_tryFix, reinterpret_cast<void*>(&func.tryFix)}; //TODO Only register if not registered already.
 public:
 	using TryFix = bool(S&, const Requirement&); //!< Use this to cast the retrieved from the registry function before call
 	bool operator()(this S*, const R&); //!< Actual model logics

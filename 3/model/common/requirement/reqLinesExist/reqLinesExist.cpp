@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdexcept>
 
-sub::ReqLineExists::ReqLineExists(const std::string_view src, const std::string_view line) : Requirement{src}, requiredLine{line}
+sub::ReqLineExists::ReqLineExists(const std::string_view src, const std::string_view line) : Requirement{src}, required_line_{line}
 {
 	using namespace std::string_literals;
 	// TODO Move these to the req() func of each station
@@ -25,11 +25,11 @@ size_t sub::ReqLineExists::type() const noexcept{
 }
 
 sub::RequirementPriority sub::ReqLineExists::priority() const noexcept {
-	return sub::RequirementPriority::ReqLinesExist;
+	return sub::RequirementPriority::MutableStateStable;
 }
 
 std::vector<std::string_view> sub::ReqLineExists::required_lines() const noexcept {
-	return {requiredLine};
+	return {required_line_};
 }
 
 // Interaction functions for this requirement with all kinds of stations
@@ -88,10 +88,11 @@ bool sub::TryFixStationCallable<sub::TransitNodeStation, sub::ReqLineExists>::op
 	for(const auto i : it->lines())
 		if(std::find(r.required_lines().begin(), r.required_lines().end(), i) != r.required_lines().end())
 			return false;
+	const auto trans = it->transfers();
 	for(auto l : r.required_lines()){
-		auto iter = std::ranges::find(it->transfers(), l,
+		auto iter = std::ranges::find(trans, l,
 				[](const std::pair<std::string_view, std::string_view> p) constexpr noexcept {return p.first;}); // std::get<0> doesn't work for some reason
-		if(iter != std::ranges::end(it->transfers())) [[likely]]
+		if(iter != std::ranges::end(trans)) [[likely]]
 			it->remove_transfer(iter->second);
 	}
 	return true;

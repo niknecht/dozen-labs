@@ -72,7 +72,7 @@ public:
 	bool verify(const sub::Requirement& it) const override; //!< @see double dispatch
 	std::unique_ptr<StationConcept> clone() const override; //!< @see Prototype
 	
-	/* NOTE: Double dispatch cannot happen before nor after the call-on-pimpl-stage of type erasure
+	/*! NOTE: Double dispatch cannot happen before nor after the call-on-pimpl-stage of type erasure
 	*  because StationConcept has virtual methods that cannot be templates and therefore cannot 
 	*  be defined for all specific requirements at once (must use Requirement base) and cannot
 	*  happen after because dispatch functions themselves must be virtual and therefore cannot
@@ -85,7 +85,6 @@ public:
 	*  be a template too. This is why double dispatch here is not an option, dispatch must happen at run time
 	*  with a wrapper directly checking obj's type thorugh a virtual, and force reinterpret cast into whatever
 	*  requirement type tag it recieves. */
-
 	StationT obj;
 };
 
@@ -104,9 +103,9 @@ private:
 	template<typename StationT>
 	StationT clone(); //!< @see Prototype
 
-	friend std::string_view name(const is_Station auto& s) {return s.name();}; // @see External polymorphism
-	friend std::vector<std::string_view> lines(const is_Station auto& s) {return s.lines();}; //@see External polymorphism
-	friend sub::station_req_fn_ret_t req(const is_Station auto& s) {return s.req();}
+	friend std::string_view name(const is_Station auto& s); //!< @see External polymorphism
+	friend std::vector<std::string_view> lines(const is_Station auto& s); //!< @see External polymorphism
+	friend sub::station_req_fn_ret_t req(const is_Station auto& s); //!< @see External polymorphism
 public:
 	template<is_Req R>
 	friend bool tryFix(is_Station auto& s, const Requirement&); //!< @see External polymorphism
@@ -145,7 +144,9 @@ public:
 	bool verify(const Requirement&) const;
 };
 
-/*! @see The hardest question in programming*/
+/*! @see The hardest question in programming
+ *
+ * But seriously, this exists because in c++ it's impossible to materialize a function and take it's pointer with not intermediary types, so this is a typical workaround.*/
 template<is_Station S, is_Req R>
 struct FreeTryFixFunctor {
 	//static const FreeTryFixFunctor& it;
@@ -159,6 +160,9 @@ struct FreeTryFixFunctor {
 //template<is_Station S, is_Req R>
 //bool FreeTryFixFunctor<S, R>::tryFix(S& s, const Requirement& r) {return FreeTryFixFunctor::it(s, r);}
 
+/*! @see The hardest question in programming
+ *
+ * But seriously, this exists because in c++ it's impossible to materialize a function and take it's pointer with not intermediary types, so this is a typical workaround.*/
 template<is_Station S, is_Req R>
 struct FreeVerifyFunctor {
 	//static const FreeVerifyFunctor& it;
@@ -217,6 +221,17 @@ std::vector<std::string_view> sub::StationModel<StationT>::lines() const {
 template<typename StationT> requires(sub::is_Station<StationT>)
 sub::station_req_fn_ret_t sub::StationModel<StationT>::req() const {
 	return req(obj);
+}
+
+// Type erasure boilertplate: external polymorphism free functions
+sub::station_req_fn_ret_t sub::req(const is_Station auto& s) {
+	return s.req();
+}
+std::string_view sub::name(const is_Station auto& s) {
+	return s.name();
+}
+std::vector<std::string_view> sub::lines(const is_Station auto& s) {
+	return s.lines();
 }
 
 // Type erasure boilertplate: external polymorphism free functions

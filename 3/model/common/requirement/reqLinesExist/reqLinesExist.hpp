@@ -16,7 +16,7 @@ private:
 
 	RequirementPriority priority() const noexcept override;
 
-	std::string requiredLine;
+	std::string required_line_;
 public:
 	size_t type() const noexcept override;
 	std::vector<std::string_view> required_lines() const noexcept;
@@ -57,5 +57,6 @@ bool sub::VerifyStationCallable<sub::MultiLineStation, sub::ReqLineExists>::oper
 template<>
 bool sub::VerifyStationCallable<sub::TransitNodeStation, sub::ReqLineExists>::operator()(this const sub::TransitNodeStation* const it, const ReqLineExists& r);
 
+// TODO Explicit this Subway or someth, make this use getters of Subway and Stations to test the requirement
 // And add this to the concept
-//bool sub::ReqLineExists::test(this const Subway*, const ReqLineExists&);
+//bool sub::ReqLineExists::test(this const Subway*);

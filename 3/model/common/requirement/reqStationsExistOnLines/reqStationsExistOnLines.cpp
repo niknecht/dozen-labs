@@ -8,7 +8,7 @@ size_t sub::ReqStationExistsOnLine::type() const noexcept {
 }
 
 sub::RequirementPriority sub::ReqStationExistsOnLine::priority() const noexcept {
-	return sub::RequirementPriority::ReqStationsExistOnLines;
+	return sub::RequirementPriority::MutableStateVolatile;
 }
 
 sub::ReqStationExistsOnLine::ReqStationExistsOnLine(std::string_view src, std::pair<std::string_view, std::string_view> trans) : Requirement(src), transfer({trans.first, trans.second})
